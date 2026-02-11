@@ -129,6 +129,44 @@ public class AzureDevOpsService
         return doc.RootElement.GetProperty("value")[0].GetProperty("id").GetString()!;
     }
 
+    public async Task<string> CreateRepoAsync(string org, string project, string pat, string repoName)
+    {
+        using var client = CreateClient(pat);
+
+        // Get project ID first
+        var projectId = await GetProjectIdAsync(client, org, project);
+
+        var url = $"https://dev.azure.com/{org}/{project}/_apis/git/repositories?api-version={ApiVersion}";
+        var body = new
+        {
+            name = repoName,
+            project = new { id = projectId }
+        };
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await client.PostAsync(url, content);
+        response.EnsureSuccessStatusCode();
+        var responseJson = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseJson);
+        return doc.RootElement.GetProperty("id").GetString()!;
+    }
+
+    public async Task<string> GetRepoIdByNameAsync(string org, string project, string pat, string repoName)
+    {
+        using var client = CreateClient(pat);
+        var url = $"https://dev.azure.com/{org}/{project}/_apis/git/repositories?api-version={ApiVersion}";
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        foreach (var repo in doc.RootElement.GetProperty("value").EnumerateArray())
+        {
+            if (string.Equals(repo.GetProperty("name").GetString(), repoName, StringComparison.OrdinalIgnoreCase))
+                return repo.GetProperty("id").GetString()!;
+        }
+        throw new Exception($"Repo '{repoName}' hittades inte i projektet '{project}'");
+    }
+
     public async Task PushFilesToRepoAsync(string org, string project, string pat, string repoId, Dictionary<string, byte[]> files)
     {
         using var client = CreateClient(pat);
@@ -302,6 +340,7 @@ public class AzureDevOpsService
         bool createIterations,
         bool createTeam,
         bool createWorkItems,
+        string? repoName,
         Dictionary<string, byte[]>? filesToUpload,
         Action<ProgressInfo> onProgress)
     {
@@ -406,38 +445,67 @@ public class AzureDevOpsService
                 }
             }
 
-            // 5. Get/create repo & push files
-            if (createRepo || uploadFiles)
+            // 5. Create or get repo & push files
+            string? repoId = null;
+            if (createRepo && !string.IsNullOrWhiteSpace(repoName))
             {
-                string repoId;
-                if (createRepo)
+                current++;
+                onProgress(new(totalSteps, current, $"Skapar repo '{repoName}'..."));
+                try
                 {
-                    // A default repo is created with the project, get its ID
-                    current++;
-                    onProgress(new(totalSteps, current, "Hämtar repo..."));
+                    repoId = await CreateRepoAsync(org, projectName, pat, repoName);
+                    result.RepoCreated = true;
+                    result.RepoName = repoName;
+                    result.Log.Add($"Repo '{repoName}' skapat (ID: {repoId})");
+                }
+                catch (Exception ex)
+                {
+                    result.Log.Add($"Repo-skapande misslyckades: {ex.Message}");
+                }
+            }
+            else if (createProject)
+            {
+                // Project was just created – get the default repo
+                try
+                {
                     repoId = await GetDefaultRepoIdAsync(org, projectName, pat);
                     result.RepoCreated = true;
                     result.Log.Add($"Standard-repo identifierat (ID: {repoId})");
                 }
-                else
+                catch (Exception ex)
                 {
-                    repoId = await GetDefaultRepoIdAsync(org, projectName, pat);
+                    result.Log.Add($"Kunde inte hämta standard-repo: {ex.Message}");
                 }
-
-                if (uploadFiles && filesToUpload != null && filesToUpload.Count > 0)
+            }
+            else if (uploadFiles)
+            {
+                // Existing project, no new repo requested – find target repo
+                try
                 {
-                    current++;
-                    onProgress(new(totalSteps, current, $"Laddar upp {filesToUpload.Count} filer till repo..."));
-                    try
-                    {
-                        await PushFilesToRepoAsync(org, projectName, pat, repoId, filesToUpload);
-                        result.FilesUploaded = true;
-                        result.Log.Add($"{filesToUpload.Count} filer uppladdade till repo");
-                    }
-                    catch (Exception ex)
-                    {
-                        result.Log.Add($"Filuppladdning misslyckades: {ex.Message}");
-                    }
+                    if (!string.IsNullOrWhiteSpace(repoName))
+                        repoId = await GetRepoIdByNameAsync(org, projectName, pat, repoName);
+                    else
+                        repoId = await GetDefaultRepoIdAsync(org, projectName, pat);
+                }
+                catch (Exception ex)
+                {
+                    result.Log.Add($"Kunde inte hitta repo: {ex.Message}");
+                }
+            }
+
+            if (uploadFiles && filesToUpload != null && filesToUpload.Count > 0 && repoId != null)
+            {
+                current++;
+                onProgress(new(totalSteps, current, $"Laddar upp {filesToUpload.Count} filer till repo..."));
+                try
+                {
+                    await PushFilesToRepoAsync(org, projectName, pat, repoId, filesToUpload);
+                    result.FilesUploaded = true;
+                    result.Log.Add($"{filesToUpload.Count} filer uppladdade till repo");
+                }
+                catch (Exception ex)
+                {
+                    result.Log.Add($"Filuppladdning misslyckades: {ex.Message}");
                 }
             }
 
@@ -623,6 +691,7 @@ public class SetupResult
     public bool ProjectCreated { get; set; }
     public string? ProjectId { get; set; }
     public bool RepoCreated { get; set; }
+    public string? RepoName { get; set; }
     public bool FilesUploaded { get; set; }
     public bool AreaPathsCreated { get; set; }
     public bool IterationsCreated { get; set; }

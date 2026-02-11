@@ -62,6 +62,23 @@
                 <td>Skapar nytt Azure DevOps-projekt med Git-repo och vald process-mall</td>
             </tr>
             <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateRepo" disabled="@Data.SetupCreateProject" /></td>
+                <td><strong>Skapa nytt repo</strong></td>
+                <td>
+                    <div style="display:flex; gap:1rem; align-items:center">
+                        <span>Skapar ett nytt repo i ett befintligt projekt</span>
+                        <input type="text" @bind="Data.RepoName" @bind:event="oninput"
+                               placeholder="Repo-namn (t.ex. Kundnamn-Integration)"
+                               style="width:280px"
+                               disabled="@Data.SetupCreateProject" />
+                    </div>
+                    @if (Data.SetupCreateProject)
+                    {
+                        <small style="color:#888">Ett standard-repo skapas automatiskt med projektet</small>
+                    }
+                </td>
+            </tr>
+            <tr>
                 <td><input type="checkbox" @bind="Data.SetupCreateAreas" /></td>
                 <td><strong>Area Paths</strong></td>
                 <td>Skapar <code>@Data.CustomerName \ @Data.TeamName</code></td>
@@ -110,6 +127,7 @@
                 @{
                     var actions = new List<string>();
                     if (Data.SetupCreateProject) actions.Add("skapa projekt");
+                    if (Data.SetupCreateRepo) actions.Add($"skapa repo '{Data.RepoName}'");
                     if (Data.SetupCreateAreas) actions.Add("skapa area paths");
                     if (Data.SetupCreateIterations) actions.Add($"skapa {Data.SprintCount} sprints");
                     if (Data.SetupCreateTeam) actions.Add("skapa team");
@@ -148,6 +166,10 @@
                         @if (setupResult.ProjectCreated)
                         {
                             <tr><td>Projekt</td><td>Skapat (ID: @setupResult.ProjectId)</td></tr>
+                        }
+                        @if (setupResult.RepoCreated)
+                        {
+                            <tr><td>Repo</td><td>@(setupResult.RepoName != null ? $"'{setupResult.RepoName}' skapat" : "Standard-repo identifierat")</td></tr>
                         }
                         @if (setupResult.AreaPathsCreated)
                         {
@@ -211,7 +233,7 @@
     private ProgressInfo? progress;
     private SetupResult? setupResult;
 
-    private bool HasAnyAction => Data.SetupCreateProject || Data.SetupCreateAreas ||
+    private bool HasAnyAction => Data.SetupCreateProject || Data.SetupCreateRepo || Data.SetupCreateAreas ||
         Data.SetupCreateIterations || Data.SetupCreateTeam ||
         Data.SetupUploadFiles || Data.SetupCreateWorkItems;
 
@@ -258,12 +280,13 @@
             setupResult = await DevOpsService.FullProjectSetupAsync(
                 Data,
                 createProject: Data.SetupCreateProject,
-                createRepo: Data.SetupCreateProject || Data.SetupUploadFiles,
+                createRepo: Data.SetupCreateRepo,
                 uploadFiles: Data.SetupUploadFiles,
                 createAreas: Data.SetupCreateAreas,
                 createIterations: Data.SetupCreateIterations,
                 createTeam: Data.SetupCreateTeam,
                 createWorkItems: Data.SetupCreateWorkItems,
+                repoName: Data.RepoName,
                 filesToUpload: files,
                 onProgress: p =>
                 {

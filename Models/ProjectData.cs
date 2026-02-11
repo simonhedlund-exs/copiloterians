@@ -43,7 +43,9 @@ public class ProjectData
     public string ProcessTemplate { get; set; } = "CMMI";
     public int SprintCount { get; set; } = 10;
     public int SprintLengthWeeks { get; set; } = 2;
+    public string RepoName { get; set; } = "";
     public bool SetupCreateProject { get; set; } = true;
+    public bool SetupCreateRepo { get; set; } = false;
     public bool SetupCreateAreas { get; set; } = true;
     public bool SetupCreateIterations { get; set; } = true;
     public bool SetupCreateTeam { get; set; } = true;
