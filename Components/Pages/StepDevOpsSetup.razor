@@ -160,7 +160,7 @@
             </div>
 
             <div style="margin-top:1rem">
-                <h3 style="color:var(--exsitec-dark); font-size:0.95rem">Resultat</h3>
+                <h3 style="color:var(--safir); font-size:0.95rem">Resultat</h3>
                 <table class="data-table">
                     <tbody>
                         @if (setupResult.ProjectCreated)
@@ -195,13 +195,13 @@
                 </table>
 
                 <details style="margin-top:1rem">
-                    <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--exsitec-dark)">
+                    <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--safir)">
                         Visa detaljerad logg (@setupResult.Log.Count rader)
                     </summary>
                     <ul style="font-size:0.8rem; margin-top:0.5rem; color:#555">
                         @foreach (var line in setupResult.Log)
                         {
-                            <li style="@(line.StartsWith("KRITISKT") || line.Contains("fel") ? "color:#e63946" : "")">@line</li>
+                            <li style="@(line.StartsWith("KRITISKT") || line.Contains("fel") ? "color:var(--alert-red, #E41E04)" : "")">@line</li>
                         }
                     </ul>
                 </details>

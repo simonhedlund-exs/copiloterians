@@ -1,4 +1,4 @@
-@* Steg 1: Grundläggande projektinformation *@
+@* Steg 1: Projektinformation och DevOps-uppsättning *@
 
 <div class="card">
     <h2>Projektinformation</h2>
@@ -10,14 +10,9 @@
             <input type="text" @bind="Data.CustomerName" @bind:event="oninput" placeholder="T.ex. Acme AB" />
         </div>
         <div class="form-group">
-            <label>Teamnamn</label>
-            <input type="text" @bind="Data.TeamName" @bind:event="oninput" />
+            <label>Projekttitel *</label>
+            <input type="text" @bind="Data.ProjectTitle" @bind:event="oninput" placeholder="T.ex. Integration Visma - HubSpot" />
         </div>
-    </div>
-
-    <div class="form-group">
-        <label>Projekttitel *</label>
-        <input type="text" @bind="Data.ProjectTitle" @bind:event="oninput" placeholder="T.ex. Integration Visma - HubSpot" />
     </div>
 
     <div class="form-group">
@@ -25,27 +20,112 @@
         <textarea rows="3" @bind="Data.ProjectDescription" @bind:event="oninput"
                   placeholder="Kort beskrivning av projektets syfte och mål"></textarea>
     </div>
+</div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label>System A</label>
-            <input type="text" @bind="Data.SystemA" @bind:event="oninput" placeholder="T.ex. Visma" />
-        </div>
-        <div class="form-group">
-            <label>System B</label>
-            <input type="text" @bind="Data.SystemB" @bind:event="oninput" placeholder="T.ex. HubSpot" />
+<div class="card">
+    <h2>Azure DevOps – Uppsättning</h2>
+    <p class="subtitle">Välj vad som ska skapas i Azure DevOps</p>
+
+    <div class="toggle-option">
+        <label class="toggle-switch">
+            <input type="checkbox" @bind="Data.SetupCreateProject" />
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="toggle-label">
+            <strong>Skapa DevOps-projekt</strong>
+            <span>Skapar ett nytt Azure DevOps-projekt för kunden</span>
         </div>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Data.CustomerName) && !string.IsNullOrWhiteSpace(Data.ProjectTitle))
-    {
-        <div class="alert alert-info">
-            <strong>Area Path:</strong> @Data.AreaPath<br />
-            <strong>Huvud-Epic:</strong> @Data.MainTitle
+    <div class="toggle-option">
+        <label class="toggle-switch">
+            <input type="checkbox" @bind="Data.SetupCreateRepo" />
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="toggle-label">
+            <strong>Sätt upp repo</strong>
+            <span>Skapar ett Git-repository i projektet</span>
         </div>
-    }
+    </div>
 </div>
+
+<div class="card">
+    <h2>Projektgrupp – Exsitec</h2>
+    <p class="subtitle">Lägg till teammedlemmar från Exsitec (används för att ge access till repot)</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Namn</th>
+                <th>Roll</th>
+                <th>Grupp</th>
+                <th>E-post</th>
+                <th>Telefon</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Data.ExsitecMembers.Count; i++)
+            {
+                var idx = i;
+                var member = Data.ExsitecMembers[idx];
+                <tr>
+                    <td><input type="text" @bind="member.Name" @bind:event="oninput" placeholder="Namn" /></td>
+                    <td>
+                        <select @bind="member.Role">
+                            <option value="Projektledare">Projektledare</option>
+                            <option value="Lösningsarkitekt">Lösningsarkitekt</option>
+                            <option value="Utvecklare">Utvecklare</option>
+                            <option value="Testare">Testare</option>
+                            <option value="Säljare">Säljare</option>
+                            <option value="">Annan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select @bind="member.Group">
+                            <option value="PG">PG</option>
+                            <option value="SG">SG</option>
+                            <option value="RG">RG</option>
+                        </select>
+                    </td>
+                    <td><input type="email" @bind="member.Email" @bind:event="oninput" placeholder="E-post" /></td>
+                    <td><input type="tel" @bind="member.Phone" @bind:event="oninput" placeholder="Telefon" /></td>
+                    <td>
+                        @if (Data.ExsitecMembers.Count > 1)
+                        {
+                            <button class="remove-btn" @onclick="() => Data.ExsitecMembers.RemoveAt(idx)">✕</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="add-btn" @onclick="AddExsitecMember">+ Lägg till Exsitec-medlem</button>
+</div>
+
+<div class="card">
+    <h2>Valfria tillägg</h2>
+    <p class="subtitle">Aktivera ytterligare funktioner för projektet</p>
+
+    <div class="toggle-option">
+        <label class="toggle-switch">
+            <input type="checkbox" @bind="Data.IncludeRisks" />
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="toggle-label">
+            <strong>Riskanalys</strong>
+            <span>Inkludera riskanalys och riskhantering i projektet</span>
+        </div>
+    </div>
+</div>
+
+@if (Data.IncludeRisks)
+{
+    <StepRisks Data="Data" />
+}
 
 @code {
     [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private void AddExsitecMember() => Data.ExsitecMembers.Add(new TeamMember { Group = "PG" });
 }

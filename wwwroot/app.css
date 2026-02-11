@@ -1,51 +1,80 @@
-/* === Exsitec Projektverktyg === */
+/* === Exsitec Projektverktyg – Brand 2025 === */
+
+/* Local Poppins font */
+@font-face { font-family: 'Poppins'; font-weight: 400; font-style: normal; src: url('assets/font/Poppins/Poppins-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-weight: 500; font-style: normal; src: url('assets/font/Poppins/Poppins-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-weight: 600; font-style: normal; src: url('assets/font/Poppins/Poppins-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Poppins'; font-weight: 700; font-style: normal; src: url('assets/font/Poppins/Poppins-Bold.ttf') format('truetype'); }
+
 :root {
-    --exsitec-primary: #e63946;
-    --exsitec-dark: #1d3557;
-    --exsitec-blue: #457b9d;
-    --exsitec-light: #a8dadc;
-    --exsitec-bg: #f1faee;
-    --exsitec-white: #ffffff;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08);
-    --radius: 8px;
+    --exsitec-primary: #7b4ce8;
+    --exsitec-dark: #000f60;
+    --exsitec-blue: #7b4ce8;
+    --exsitec-light: #d8cfff;
+    --exsitec-bg: #f2f2fa;
+    --exsitec-white: #fafafc;
+    --exsitec-black: #0e0e1e;
+    --lolit: #7b4ce8;
+    --light-lolit: #a78dff;
+    --extra-light-lolit: #d8cfff;
+    --powder-lolit: #f1efff;
+    --safir: #000f60;
+    --shadow: 0 2px 12px rgba(14,14,30,0.06);
+    --radius: 16px;
 }
 
 html, body {
-    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Overpass', 'Segoe UI', sans-serif;
     margin: 0;
     padding: 0;
     background: var(--exsitec-bg);
-    color: #333;
+    color: var(--exsitec-black);
     min-height: 100vh;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
 }
 
 /* Header */
 .app-header {
-    background: var(--exsitec-dark);
+    background: var(--safir);
     color: white;
-    padding: 1rem 2rem;
+    padding: 0.75rem 2rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 12px rgba(0,15,96,0.15);
+    position: relative;
+    z-index: 100;
 }
 
 .app-header h1 {
     margin: 0;
-    font-size: 1.4rem;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
+    color: white;
+    line-height: 1.2;
 }
 
 .app-header .logo {
-    width: 32px;
-    height: 32px;
-    background: var(--exsitec-primary);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.1rem;
+    height: 28px;
+    width: auto;
+    display: block;
+}
+
+.app-header .header-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.25);
+    flex-shrink: 0;
 }
 
 /* Stepper */
@@ -82,6 +111,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'Poppins', sans-serif;
     font-weight: 600;
     font-size: 0.8rem;
     border: 2px solid #ccc;
@@ -92,14 +122,14 @@ html, body {
 }
 
 .stepper-item.active .stepper-number {
-    background: var(--exsitec-primary);
-    border-color: var(--exsitec-primary);
+    background: var(--lolit);
+    border-color: var(--lolit);
     color: white;
 }
 
 .stepper-item.completed .stepper-number {
-    background: var(--exsitec-blue);
-    border-color: var(--exsitec-blue);
+    background: var(--safir);
+    border-color: var(--safir);
     color: white;
 }
 
@@ -110,7 +140,7 @@ html, body {
 
 .stepper-item.active .stepper-label,
 .stepper-item.completed .stepper-label {
-    color: var(--exsitec-dark);
+    color: var(--safir);
 }
 
 .stepper-line {
@@ -121,7 +151,7 @@ html, body {
 }
 
 .stepper-line.completed {
-    background: var(--exsitec-blue);
+    background: var(--lolit);
 }
 
 /* Main content */
@@ -134,16 +164,17 @@ html, body {
 /* Card */
 .card {
     background: var(--exsitec-white);
-    border-radius: var(--radius);
+    border-radius: 24px;
     box-shadow: var(--shadow);
     padding: 2rem;
     margin-bottom: 1.5rem;
-    border: none;
+    border: 1px solid rgba(14,14,30,0.05);
 }
 
 .card h2 {
     margin-top: 0;
-    color: var(--exsitec-dark);
+    color: var(--safir);
+    font-family: 'Poppins', sans-serif;
     font-size: 1.3rem;
     margin-bottom: 0.3rem;
 }
@@ -164,7 +195,8 @@ html, body {
     font-weight: 600;
     margin-bottom: 0.3rem;
     font-size: 0.85rem;
-    color: var(--exsitec-dark);
+    color: var(--safir);
+    font-family: 'Poppins', sans-serif;
 }
 
 .form-group input,
@@ -183,8 +215,8 @@ html, body {
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: var(--exsitec-blue);
-    box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+    border-color: var(--lolit);
+    box-shadow: 0 0 0 3px rgba(123, 76, 232, 0.15);
 }
 
 .form-row {
@@ -208,8 +240,9 @@ html, body {
 /* Buttons */
 .btn {
     padding: 0.6rem 1.5rem;
-    border-radius: 6px;
+    border-radius: 999px;
     border: none;
+    font-family: 'Poppins', sans-serif;
     font-weight: 600;
     cursor: pointer;
     font-size: 0.9rem;
@@ -225,22 +258,23 @@ html, body {
 }
 
 .btn-primary {
-    background: var(--exsitec-primary);
-    color: white;
-    border-color: var(--exsitec-primary);
+    background: var(--lolit);
+    color: var(--extra-light-lolit);
+    border-color: var(--lolit);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #c62d3a;
+    background: var(--safir);
+    color: var(--extra-light-lolit);
 }
 
 .btn-secondary {
-    background: var(--exsitec-blue);
-    color: white;
+    background: var(--safir);
+    color: var(--extra-light-lolit);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: #3a6a87;
+    background: var(--exsitec-black);
 }
 
 .btn-outline {
@@ -250,8 +284,8 @@ html, body {
 }
 
 .btn-outline:hover:not(:disabled) {
-    border-color: var(--exsitec-blue);
-    color: var(--exsitec-blue);
+    border-color: var(--lolit);
+    color: var(--lolit);
 }
 
 .btn-success {
@@ -264,12 +298,12 @@ html, body {
 }
 
 .btn-danger {
-    background: #e63946;
+    background: var(--alert-red, #E41E04);
     color: white;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background: #c62d3a;
+    background: #c41800;
 }
 
 .btn-sm {
@@ -293,10 +327,11 @@ html, body {
 }
 
 .data-table th {
-    background: var(--exsitec-dark);
+    background: var(--safir);
     color: white;
     padding: 0.6rem 0.75rem;
     text-align: left;
+    font-family: 'Poppins', sans-serif;
     font-weight: 600;
 }
 
@@ -340,7 +375,7 @@ html, body {
 
 .risk-badge.high {
     background: #fde8e8;
-    color: #e63946;
+    color: var(--alert-red, #E41E04);
 }
 
 .risk-badge.medium {
@@ -366,13 +401,14 @@ html, body {
 }
 
 .tree-epic-header {
-    background: var(--exsitec-dark);
+    background: var(--safir);
     color: white;
     padding: 0.6rem 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .tree-epic-header input {
@@ -387,16 +423,16 @@ html, body {
 
 .tree-feature {
     margin-left: 1.5rem;
-    border-left: 2px solid var(--exsitec-blue);
+    border-left: 2px solid var(--lolit);
     padding-left: 1rem;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
 }
 
 .tree-feature-header {
-    background: rgba(69, 123, 157, 0.1);
+    background: var(--powder-lolit);
     padding: 0.5rem 0.75rem;
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -467,6 +503,319 @@ html, body {
 .type-badge.requirement { background: #fef3c7; color: #92400e; }
 .type-badge.task { background: #d1fae5; color: #065f46; }
 
+/* Hours badge for calculated totals */
+.hours-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 45px;
+    text-align: center;
+}
+
+.hours-badge.epic-hours {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.hours-badge.feature-hours {
+    background: var(--safir);
+    color: white;
+}
+
+/* Total hours banner */
+.total-hours-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--lolit), var(--safir));
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.total-hours-banner strong {
+    font-size: 1.5rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Floating Budget Sidebar */
+.budget-sidebar {
+    position: fixed;
+    right: 20px;
+    top: 120px;
+    width: 220px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,15,96,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.budget-sidebar.budget-under {
+    border: 2px solid #10b981;
+}
+
+.budget-sidebar.budget-exact {
+    border: 2px solid var(--lolit);
+}
+
+.budget-sidebar.budget-over {
+    border: 2px solid #ef4444;
+}
+
+.budget-sidebar-header {
+    background: var(--safir);
+    color: white;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.budget-icon {
+    font-size: 1.1rem;
+}
+
+.budget-sidebar-content {
+    padding: 1rem;
+}
+
+.budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+}
+
+.budget-item.difference {
+    padding-top: 0.6rem;
+}
+
+.budget-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.budget-value {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--safir);
+}
+
+.budget-value.under-budget {
+    color: #10b981;
+}
+
+.budget-value.over-budget {
+    color: #ef4444;
+}
+
+.budget-divider {
+    height: 1px;
+    background: #eee;
+    margin: 0.5rem 0;
+}
+
+.budget-progress-container {
+    margin-top: 0.75rem;
+}
+
+.budget-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.budget-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lolit), var(--safir));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.budget-over .budget-progress-fill {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.budget-progress-text {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 0.3rem;
+}
+
+.budget-status-text {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.budget-status-text .status-good {
+    color: #10b981;
+}
+
+.budget-status-text .status-perfect {
+    color: var(--lolit);
+}
+
+.budget-status-text .status-warning {
+    color: #ef4444;
+}
+
+.budget-under .budget-status-text {
+    background: #ecfdf5;
+}
+
+.budget-exact .budget-status-text {
+    background: var(--powder-lolit);
+}
+
+.budget-over .budget-status-text {
+    background: #fef2f2;
+}
+
+/* Responsive: hide sidebar on small screens */
+@media (max-width: 1200px) {
+    .budget-sidebar {
+        position: static;
+        width: 100%;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+}
+
+/* Drag & Drop styles */
+.drag-handle {
+    cursor: grab;
+    color: #999;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.tree-epic[draggable="true"],
+.tree-feature[draggable="true"],
+.tree-requirement[draggable="true"],
+.tree-task[draggable="true"] {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tree-epic.drag-over,
+.tree-feature.drag-over,
+.tree-requirement.drag-over,
+.tree-task.drag-over {
+    outline: 2px dashed var(--lolit);
+    outline-offset: 2px;
+}
+
+.tree-epic[draggable="true"]:active,
+.tree-feature[draggable="true"]:active,
+.tree-requirement[draggable="true"]:active,
+.tree-task[draggable="true"]:active {
+    opacity: 0.6;
+}
+
+/* Toggle switch for optional features */
+.toggle-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+}
+
+.toggle-option:hover {
+    border-color: var(--lolit);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--lolit);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.toggle-label strong {
+    font-family: 'Poppins', sans-serif;
+    color: var(--safir);
+    font-size: 0.95rem;
+}
+
+.toggle-label span {
+    color: #666;
+    font-size: 0.8rem;
+}
+
 /* Export section */
 .export-grid {
     display: grid;
@@ -477,20 +826,21 @@ html, body {
 
 .export-card {
     border: 2px solid #eee;
-    border-radius: var(--radius);
+    border-radius: 20px;
     padding: 1.5rem;
     text-align: center;
     transition: all 0.2s;
 }
 
 .export-card:hover {
-    border-color: var(--exsitec-blue);
+    border-color: var(--lolit);
     box-shadow: var(--shadow);
 }
 
 .export-card h3 {
     margin: 0.5rem 0;
-    color: var(--exsitec-dark);
+    color: var(--safir);
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
 }
 
@@ -515,7 +865,7 @@ html, body {
 
 .devops-connection h3 {
     margin-top: 0;
-    color: var(--exsitec-dark);
+    color: var(--safir);
 }
 
 /* Progress bar */
@@ -530,7 +880,7 @@ html, body {
 
 .progress-fill {
     height: 100%;
-    background: var(--exsitec-primary);
+    background: linear-gradient(90deg, var(--lolit), var(--safir));
     border-radius: 4px;
     transition: width 0.3s;
 }
@@ -547,11 +897,12 @@ html, body {
 }
 
 .summary-section h3 {
-    color: var(--exsitec-dark);
+    color: var(--safir);
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     margin-bottom: 0.5rem;
     padding-bottom: 0.3rem;
-    border-bottom: 2px solid var(--exsitec-light);
+    border-bottom: 2px solid var(--extra-light-lolit);
 }
 
 .summary-grid {
@@ -579,9 +930,9 @@ html, body {
 }
 
 .alert-info {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #93c5fd;
+    background: var(--powder-lolit);
+    color: var(--safir);
+    border: 1px solid var(--extra-light-lolit);
 }
 
 .alert-success {
@@ -611,8 +962,8 @@ html, body {
 }
 
 .add-btn:hover {
-    border-color: var(--exsitec-blue);
-    color: var(--exsitec-blue);
+    border-color: var(--lolit);
+    color: var(--lolit);
 }
 
 .remove-btn {
@@ -626,7 +977,7 @@ html, body {
 }
 
 .remove-btn:hover {
-    color: var(--exsitec-primary);
+    color: var(--alert-red, #E41E04);
 }
 
 /* Responsive */

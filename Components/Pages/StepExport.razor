@@ -1,4 +1,4 @@
-@* Steg 7: Exportera *@
+@* Steg 4: Exportera *@
 @inject ExcelGeneratorService ExcelService
 @inject AzureDevOpsService DevOpsService
 @inject IJSRuntime JS
@@ -30,10 +30,13 @@
         <p>Exsitec: @Data.ExsitecMembers.Count st | Kund: @Data.CustomerMembers.Count st</p>
     </div>
 
-    <div class="summary-section">
-        <h3>Risker</h3>
-        <p>@Data.Risks.Count(r => r.Selected) av @Data.Risks.Count risker valda</p>
-    </div>
+    @if (Data.IncludeRisks)
+    {
+        <div class="summary-section">
+            <h3>Risker</h3>
+            <p>@Data.Risks.Count(r => r.Selected) av @Data.Risks.Count risker valda</p>
+        </div>
+    }
 
     <div class="summary-section">
         <h3>DevOps-struktur</h3>
@@ -44,6 +47,41 @@
                 + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Tasks.Count)));
         }
         <p>@Data.DevOpsStructure.Epics.Count Epics, @totalItems totalt work items</p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Ladda ner CSV-filer</h2>
+    <p class="subtitle">Generera CSV-filer för import eller analys</p>
+
+    <div class="export-grid">
+        <div class="export-card">
+            <div class="export-icon">📄</div>
+            <h3>Work Items CSV</h3>
+            <p>Exportera alla work items i CSV-format för import till DevOps eller andra system</p>
+            <button class="btn btn-secondary" @onclick="DownloadWorkItemsCsv">Ladda ner CSV</button>
+        </div>
+        <div class="export-card">
+            <div class="export-icon">👥</div>
+            <h3>Team CSV</h3>
+            <p>Exportera projektgruppen som CSV</p>
+            <button class="btn btn-secondary" @onclick="DownloadTeamCsv">Ladda ner CSV</button>
+        </div>
+        @if (Data.IncludeRisks)
+        {
+            <div class="export-card">
+                <div class="export-icon">⚠️</div>
+                <h3>Risker CSV</h3>
+                <p>Exportera valda risker som CSV</p>
+                <button class="btn btn-secondary" @onclick="DownloadRisksCsv">Ladda ner CSV</button>
+            </div>
+        }
+        <div class="export-card">
+            <div class="export-icon">📦</div>
+            <h3>Alla CSV-filer</h3>
+            <p>Ladda ner alla CSV-filer på en gång</p>
+            <button class="btn btn-primary" @onclick="DownloadAllCsv">Ladda ner alla</button>
+        </div>
     </div>
 </div>
 
@@ -80,13 +118,13 @@
 </div>
 
 <div class="card">
-    <h2>Importera work items till Azure DevOps</h2>
+    <h2>Ladda upp work items till Azure DevOps</h2>
     <p class="subtitle">Skicka alla Epics, Features, Requirements och Tasks direkt till ditt Azure DevOps-projekt</p>
 
     @if (string.IsNullOrWhiteSpace(Data.DevOpsOrg) || string.IsNullOrWhiteSpace(Data.DevOpsProject) || string.IsNullOrWhiteSpace(Data.DevOpsPat))
     {
         <div class="alert alert-error">
-            Du måste ange Organisation, Projektnamn och PAT i steget "DevOps Setup" innan du kan importera.
+            Du måste ange Organisation, Projektnamn och PAT i steget "Projektinfo" innan du kan importera.
         </div>
     }
     else
@@ -96,9 +134,9 @@
             <div class="export-grid">
                 <div class="export-card">
                     <div class="export-icon">🚀</div>
-                    <h3>Importera till DevOps</h3>
-                    <p>Importerar @totalItems work items till <strong>@Data.DevOpsOrg / @Data.DevOpsProject</strong></p>
-                    <button class="btn btn-primary" @onclick="ImportToDevOps">Importera work items</button>
+                    <h3>Ladda upp till DevOps</h3>
+                    <p>Laddar upp @totalItems work items till <strong>@Data.DevOpsOrg / @Data.DevOpsProject</strong></p>
+                    <button class="btn btn-primary" @onclick="ImportToDevOps">Ladda upp work items</button>
                 </div>
             </div>
         }
@@ -120,7 +158,7 @@
             </div>
 
             <details style="margin-top:0.5rem">
-                <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--exsitec-dark)">
+                <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--safir)">
                     Visa skapade work items (@importResults.Count st)
                 </summary>
                 <table class="data-table" style="margin-top:0.5rem; font-size:0.85rem">
@@ -142,7 +180,7 @@
                 <a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_backlogs" target="_blank" class="btn btn-secondary">
                     Öppna Backlog i DevOps
                 </a>
-                <button class="btn btn-outline btn-sm" @onclick="ResetImport">Importera igen</button>
+                <button class="btn btn-outline btn-sm" @onclick="ResetImport">Ladda upp igen</button>
             </div>
         }
 
@@ -200,6 +238,99 @@
         importError = null;
     }
 
+    // CSV Export methods
+    private async Task DownloadWorkItemsCsv()
+    {
+        var csv = GenerateWorkItemsCsv();
+        await DownloadCsvFile($"WorkItems_{Data.CustomerName}.csv", csv);
+    }
+
+    private async Task DownloadTeamCsv()
+    {
+        var csv = GenerateTeamCsv();
+        await DownloadCsvFile($"Team_{Data.CustomerName}.csv", csv);
+    }
+
+    private async Task DownloadRisksCsv()
+    {
+        var csv = GenerateRisksCsv();
+        await DownloadCsvFile($"Risker_{Data.CustomerName}.csv", csv);
+    }
+
+    private async Task DownloadAllCsv()
+    {
+        await DownloadWorkItemsCsv();
+        await Task.Delay(300);
+        await DownloadTeamCsv();
+        if (Data.IncludeRisks)
+        {
+            await Task.Delay(300);
+            await DownloadRisksCsv();
+        }
+    }
+
+    private string GenerateWorkItemsCsv()
+    {
+        var lines = new List<string> { "Type,Title,Parent,Effort,Estimate" };
+        
+        foreach (var epic in Data.DevOpsStructure.Epics)
+        {
+            lines.Add($"Epic,\"{EscapeCsv(epic.Title)}\",,,,");
+            foreach (var feature in epic.Features)
+            {
+                lines.Add($"Feature,\"{EscapeCsv(feature.Title)}\",\"{EscapeCsv(epic.Title)}\",{feature.Effort},");
+                foreach (var req in feature.Requirements)
+                {
+                    lines.Add($"Requirement,\"{EscapeCsv(req.Title)}\",\"{EscapeCsv(feature.Title)}\",,{req.Estimate}");
+                    foreach (var task in req.Tasks)
+                    {
+                        lines.Add($"Task,\"{EscapeCsv(task.Title)}\",\"{EscapeCsv(req.Title)}\",,");
+                    }
+                }
+            }
+        }
+        
+        return string.Join("\n", lines);
+    }
+
+    private string GenerateTeamCsv()
+    {
+        var lines = new List<string> { "Type,Name,Role,Group,Email,Phone,Comment" };
+        
+        foreach (var member in Data.ExsitecMembers)
+        {
+            lines.Add($"Exsitec,\"{EscapeCsv(member.Name)}\",\"{EscapeCsv(member.Role)}\",\"{EscapeCsv(member.Group)}\",\"{EscapeCsv(member.Email)}\",\"{EscapeCsv(member.Phone)}\",");
+        }
+        
+        foreach (var member in Data.CustomerMembers)
+        {
+            lines.Add($"Kund,\"{EscapeCsv(member.Name)}\",\"{EscapeCsv(member.Role)}\",,\"{EscapeCsv(member.Email)}\",\"{EscapeCsv(member.Phone)}\",\"{EscapeCsv(member.Comment)}\"");
+        }
+        
+        return string.Join("\n", lines);
+    }
+
+    private string GenerateRisksCsv()
+    {
+        var lines = new List<string> { "Title,Category,Probability,Impact,RiskValue,Priority,Owner,Strategy" };
+        
+        foreach (var risk in Data.Risks.Where(r => r.Selected))
+        {
+            lines.Add($"\"{EscapeCsv(risk.Title)}\",\"{EscapeCsv(risk.Category)}\",{risk.Probability},{risk.Impact},{risk.RiskValue},\"{risk.Priority}\",\"{EscapeCsv(risk.Owner)}\",\"{EscapeCsv(risk.Strategy)}\"");
+        }
+        
+        return string.Join("\n", lines);
+    }
+
+    private string EscapeCsv(string? value) => value?.Replace("\"", "\"\"") ?? "";
+
+    private async Task DownloadCsvFile(string filename, string content)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        await JS.InvokeVoidAsync("downloadFile", filename, "text/csv", bytes);
+    }
+
+    // Excel Export methods
     private async Task DownloadDevOpsImport()
     {
         var bytes = ExcelService.GenerateDevOpsImport(Data);
