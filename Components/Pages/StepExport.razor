@@ -1,197 +1,283 @@
-@* Steg 4: Exportera *@
+@* Steg 4: Sammanfattning & Export *@
 @inject ExcelGeneratorService ExcelService
 @inject AzureDevOpsService DevOpsService
 @inject IJSRuntime JS
 
-<div class="card">
-    <h2>Sammanfattning</h2>
-    <p class="subtitle">Granska projektinformationen innan export</p>
+<!-- Sammanfattning Header -->
+<div class="summary-header">
+    <div class="summary-header-content">
+        <h1>📋 Projektsammanfattning</h1>
+        <p class="subtitle">Granska all projektinformation innan export</p>
+    </div>
+    <div class="summary-header-stats">
+        <div class="stat-item">
+            <span class="stat-value">@Data.BudgetHours</span>
+            <span class="stat-label">Budgettimmar</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">@GetTotalEstimatedHours()</span>
+            <span class="stat-label">Estimerat</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">@GetTotalWorkItems()</span>
+            <span class="stat-label">Work Items</span>
+        </div>
+    </div>
+</div>
 
-    <div class="summary-section">
-        <h3>Projektinfo</h3>
-        <dl class="summary-grid">
-            <dt>Kund</dt><dd>@Data.CustomerName</dd>
-            <dt>Projekt</dt><dd>@Data.MainTitle</dd>
-            <dt>Area Path</dt><dd>@Data.AreaPath</dd>
-            @if (Data.ProjectStart.HasValue)
-            {
-                <dt>Projektstart</dt><dd>@Data.ProjectStart.Value.ToString("yyyy-MM-dd")</dd>
-            }
-            @if (Data.GoLive.HasValue)
-            {
-                <dt>Go-live</dt><dd>@Data.GoLive.Value.ToString("yyyy-MM-dd")</dd>
-            }
-            <dt>Budget</dt><dd>@Data.BudgetHours h (@Data.EstimatedWeeks veckor)</dd>
-        </dl>
+<!-- Sammanfattning Grid -->
+<div class="summary-grid-container">
+    <!-- Projektinfo -->
+    <div class="summary-card">
+        <div class="summary-card-header">
+            <span class="summary-card-icon">🏢</span>
+            <h3>Projektinfo</h3>
+        </div>
+        <div class="summary-card-content">
+            <div class="summary-row">
+                <span class="summary-label">Kund</span>
+                <span class="summary-value">@(string.IsNullOrEmpty(Data.CustomerName) ? "—" : Data.CustomerName)</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Projekttitel</span>
+                <span class="summary-value">@(string.IsNullOrEmpty(Data.ProjectTitle) ? "—" : Data.ProjectTitle)</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Beskrivning</span>
+                <span class="summary-value description">@(string.IsNullOrEmpty(Data.ProjectDescription) ? "—" : Data.ProjectDescription)</span>
+            </div>
+        </div>
     </div>
 
-    <div class="summary-section">
-        <h3>Projektgrupp</h3>
-        <p>Exsitec: @Data.ExsitecMembers.Count st | Kund: @Data.CustomerMembers.Count st</p>
+    <!-- Tidsplan -->
+    <div class="summary-card">
+        <div class="summary-card-header">
+            <span class="summary-card-icon">📅</span>
+            <h3>Tidsplan</h3>
+        </div>
+        <div class="summary-card-content">
+            <div class="summary-row">
+                <span class="summary-label">Projektstart</span>
+                <span class="summary-value">@(Data.ProjectStart.HasValue ? Data.ProjectStart.Value.ToString("yyyy-MM-dd") : "Ej satt")</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Go-live</span>
+                <span class="summary-value">@(Data.GoLive.HasValue ? Data.GoLive.Value.ToString("yyyy-MM-dd") : "Ej satt")</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Veckor</span>
+                <span class="summary-value">@Data.EstimatedWeeks veckor</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Tempo</span>
+                <span class="summary-value">@Data.WeeklyPace h/vecka</span>
+            </div>
+            @if (Data.Milestones.Any())
+            {
+                <div class="summary-row">
+                    <span class="summary-label">Milstolpar</span>
+                    <span class="summary-value">@Data.Milestones.Count st</span>
+                </div>
+            }
+        </div>
     </div>
 
+    <!-- Projektgrupp -->
+    <div class="summary-card">
+        <div class="summary-card-header">
+            <span class="summary-card-icon">👥</span>
+            <h3>Projektgrupp</h3>
+        </div>
+        <div class="summary-card-content">
+            <div class="team-summary">
+                <div class="team-group">
+                    <span class="team-badge exsitec">Exsitec</span>
+                    <span class="team-count">@Data.ExsitecMembers.Count(m => !string.IsNullOrEmpty(m.Name)) personer</span>
+                </div>
+                @foreach (var member in Data.ExsitecMembers.Where(m => !string.IsNullOrEmpty(m.Name)).Take(5))
+                {
+                    <div class="team-member-mini">
+                        <span class="member-name">@member.Name</span>
+                        <span class="member-role">@member.Role</span>
+                    </div>
+                }
+                @if (Data.ExsitecMembers.Count(m => !string.IsNullOrEmpty(m.Name)) > 5)
+                {
+                    <span class="more-members">+@(Data.ExsitecMembers.Count(m => !string.IsNullOrEmpty(m.Name)) - 5) fler...</span>
+                }
+            </div>
+            <div class="team-summary" style="margin-top: 0.75rem;">
+                <div class="team-group">
+                    <span class="team-badge customer">Kund</span>
+                    <span class="team-count">@Data.CustomerMembers.Count(m => !string.IsNullOrEmpty(m.Name)) personer</span>
+                </div>
+                @foreach (var member in Data.CustomerMembers.Where(m => !string.IsNullOrEmpty(m.Name)).Take(3))
+                {
+                    <div class="team-member-mini">
+                        <span class="member-name">@member.Name</span>
+                        <span class="member-role">@member.Role</span>
+                    </div>
+                }
+                @if (Data.CustomerMembers.Count(m => !string.IsNullOrEmpty(m.Name)) > 3)
+                {
+                    <span class="more-members">+@(Data.CustomerMembers.Count(m => !string.IsNullOrEmpty(m.Name)) - 3) fler...</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Risker -->
     @if (Data.IncludeRisks)
     {
-        <div class="summary-section">
-            <h3>Risker</h3>
-            <p>@Data.Risks.Count(r => r.Selected) av @Data.Risks.Count risker valda</p>
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <span class="summary-card-icon">⚠️</span>
+                <h3>Risker</h3>
+            </div>
+            <div class="summary-card-content">
+                <div class="summary-row">
+                    <span class="summary-label">Valda risker</span>
+                    <span class="summary-value">@Data.Risks.Count(r => r.Selected) av @Data.Risks.Count</span>
+                </div>
+                @foreach (var risk in Data.Risks.Where(r => r.Selected).Take(3))
+                {
+                    <div class="risk-mini">
+                        <span class="risk-title">@risk.Title</span>
+                        <span class="risk-level risk-@GetRiskLevel(risk)">@risk.RiskValue</span>
+                    </div>
+                }
+                @if (Data.Risks.Count(r => r.Selected) > 3)
+                {
+                    <span class="more-members">+@(Data.Risks.Count(r => r.Selected) - 3) fler risker...</span>
+                }
+            </div>
         </div>
     }
+</div>
 
-    <div class="summary-section">
-        <h3>DevOps-struktur</h3>
+<!-- DevOps-struktur översikt -->
+<div class="card">
+    <div class="card-header-flex">
+        <div>
+            <h2>🏗️ DevOps-struktur</h2>
+            <p class="subtitle">Översikt av work items som ska skapas</p>
+        </div>
+        <div class="structure-stats">
+            <span class="structure-stat"><strong>@Data.DevOpsStructure.Epics.Count</strong> Epics</span>
+            <span class="structure-stat"><strong>@Data.DevOpsStructure.Epics.Sum(e => e.Features.Count)</strong> Features</span>
+            <span class="structure-stat"><strong>@Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Count))</strong> Requirements</span>
+            <span class="structure-stat"><strong>@Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Tasks.Count)))</strong> Tasks</span>
+        </div>
+    </div>
+    
+    <div class="structure-preview">
         @{
-            var totalItems = Data.DevOpsStructure.Epics.Count
-                + Data.DevOpsStructure.Epics.Sum(e => e.Features.Count)
-                + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Count))
-                + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Tasks.Count)));
+            var epicsToShow = showAllEpics ? Data.DevOpsStructure.Epics : Data.DevOpsStructure.Epics.Take(3).ToList();
         }
-        <p>@Data.DevOpsStructure.Epics.Count Epics, @totalItems totalt work items</p>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Ladda ner CSV-filer</h2>
-    <p class="subtitle">Generera CSV-filer för import eller analys</p>
-
-    <div class="export-grid">
-        <div class="export-card">
-            <div class="export-icon">📄</div>
-            <h3>Work Items CSV</h3>
-            <p>Exportera alla work items i CSV-format för import till DevOps eller andra system</p>
-            <button class="btn btn-secondary" @onclick="DownloadWorkItemsCsv">Ladda ner CSV</button>
-        </div>
-        <div class="export-card">
-            <div class="export-icon">👥</div>
-            <h3>Team CSV</h3>
-            <p>Exportera projektgruppen som CSV</p>
-            <button class="btn btn-secondary" @onclick="DownloadTeamCsv">Ladda ner CSV</button>
-        </div>
-        @if (Data.IncludeRisks)
+        @foreach (var epic in epicsToShow)
         {
-            <div class="export-card">
-                <div class="export-icon">⚠️</div>
-                <h3>Risker CSV</h3>
-                <p>Exportera valda risker som CSV</p>
-                <button class="btn btn-secondary" @onclick="DownloadRisksCsv">Ladda ner CSV</button>
-            </div>
-        }
-        <div class="export-card">
-            <div class="export-icon">📦</div>
-            <h3>Alla CSV-filer</h3>
-            <p>Ladda ner alla CSV-filer på en gång</p>
-            <button class="btn btn-primary" @onclick="DownloadAllCsv">Ladda ner alla</button>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Ladda ner Excel-filer</h2>
-    <p class="subtitle">Generera Excel-dokument baserade på dina projektuppgifter</p>
-
-    <div class="export-grid">
-        <div class="export-card">
-            <div class="export-icon">📋</div>
-            <h3>DevOps Import</h3>
-            <p>Importstruktur för Azure DevOps med alla work items</p>
-            <button class="btn btn-secondary" @onclick="DownloadDevOpsImport">Ladda ner</button>
-        </div>
-        <div class="export-card">
-            <div class="export-icon">✅</div>
-            <h3>Checklista</h3>
-            <p>Projektchecklista med alla faser och aktiviteter</p>
-            <button class="btn btn-secondary" @onclick="DownloadChecklist">Ladda ner</button>
-        </div>
-        <div class="export-card">
-            <div class="export-icon">📊</div>
-            <h3>Projektverktyg</h3>
-            <p>Komplett projektverktyg med alla flikar</p>
-            <button class="btn btn-secondary" @onclick="DownloadProjektverktyg">Ladda ner</button>
-        </div>
-        <div class="export-card">
-            <div class="export-icon">📦</div>
-            <h3>Alla filer</h3>
-            <p>Ladda ner alla tre Excel-filer på en gång</p>
-            <button class="btn btn-primary" @onclick="DownloadAll">Ladda ner alla</button>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <h2>Ladda upp work items till Azure DevOps</h2>
-    <p class="subtitle">Skicka alla Epics, Features, Requirements och Tasks direkt till ditt Azure DevOps-projekt</p>
-
-    @if (string.IsNullOrWhiteSpace(Data.DevOpsOrg) || string.IsNullOrWhiteSpace(Data.DevOpsProject) || string.IsNullOrWhiteSpace(Data.DevOpsPat))
-    {
-        <div class="alert alert-error">
-            Du måste ange Organisation, Projektnamn och PAT i steget "Projektinfo" innan du kan importera.
-        </div>
-    }
-    else
-    {
-        @if (!isImporting && importResults == null)
-        {
-            <div class="export-grid">
-                <div class="export-card">
-                    <div class="export-icon">🚀</div>
-                    <h3>Ladda upp till DevOps</h3>
-                    <p>Laddar upp @totalItems work items till <strong>@Data.DevOpsOrg / @Data.DevOpsProject</strong></p>
-                    <button class="btn btn-primary" @onclick="ImportToDevOps">Ladda upp work items</button>
+            <div class="epic-preview">
+                <div class="epic-preview-header">
+                    <span class="wi-badge wi-epic">Epic</span>
+                    <span class="epic-title">@epic.Title</span>
+                    <span class="epic-hours">@GetEpicHours(epic) h</span>
+                </div>
+                <div class="epic-preview-features">
+                    @{
+                        var featuresToShow = showAllEpics ? epic.Features : epic.Features.Take(2).ToList();
+                    }
+                    @foreach (var feature in featuresToShow)
+                    {
+                        <span class="feature-chip">@feature.Title (@GetFeatureHours(feature) h)</span>
+                    }
+                    @if (!showAllEpics && epic.Features.Count > 2)
+                    {
+                        <span class="feature-chip more">+@(epic.Features.Count - 2) fler</span>
+                    }
                 </div>
             </div>
         }
-
-        @if (isImporting && importProgress != null)
+        @if (Data.DevOpsStructure.Epics.Count > 3)
         {
-            <div style="margin-top:1rem">
-                <div class="progress-bar-custom">
-                    <div class="progress-fill" style="width: @(importProgress.Total > 0 ? (int)(100.0 * importProgress.Current / importProgress.Total) : 0)%"></div>
+            <button class="btn-expand" @onclick="() => showAllEpics = !showAllEpics">
+                @if (showAllEpics)
+                {
+                    <span>▲ Visa mindre</span>
+                }
+                else
+                {
+                    <span>▼ Visa alla @Data.DevOpsStructure.Epics.Count epics</span>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Export Actions -->
+<div class="card export-actions-card">
+    <h2>📤 Exportera</h2>
+    <p class="subtitle">Ladda ner DevOps-struktur eller skicka direkt till Azure DevOps</p>
+
+    <div class="export-simple-grid">
+        <!-- CSV Download -->
+        <div class="export-option">
+            <div class="export-option-icon">📄</div>
+            <div class="export-option-content">
+                <h3>Ladda ner CSV</h3>
+                <p>Exportera DevOps-strukturen som CSV-fil för import eller analys</p>
+            </div>
+            <button class="btn btn-secondary" @onclick="DownloadWorkItemsCsv">
+                Ladda ner CSV
+            </button>
+        </div>
+
+        <!-- DevOps Upload -->
+        <div class="export-option highlight">
+            <div class="export-option-icon">🚀</div>
+            <div class="export-option-content">
+                <h3>Ladda upp till DevOps</h3>
+                <p>Skapa work items direkt i Azure DevOps Boards</p>
+            </div>
+            
+            @if (!isImporting && importResults == null)
+            {
+                <button class="btn btn-primary" @onclick="ImportToDevOps">
+                    Ladda upp @GetTotalWorkItems() work items
+                </button>
+            }
+
+            @if (isImporting && importProgress != null)
+            {
+                <div class="import-progress">
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: @(importProgress.Total > 0 ? (int)(100.0 * importProgress.Current / importProgress.Total) : 0)%"></div>
+                    </div>
+                    <p class="progress-text">@importProgress.Message (@importProgress.Current / @importProgress.Total)</p>
                 </div>
-                <p class="progress-text">@importProgress.Message (@importProgress.Current / @importProgress.Total)</p>
-            </div>
-        }
+            }
 
-        @if (importResults != null)
-        {
-            <div class="alert alert-success" style="margin-top:1rem">
-                <strong>Klart!</strong> @importResults.Count work items skapade i Azure DevOps.
-            </div>
+            @if (importResults != null)
+            {
+                <div class="import-success">
+                    <span class="success-icon">✅</span>
+                    <span>@importResults.Count work items skapade!</span>
+                    <a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_backlogs" target="_blank" class="btn btn-outline btn-sm">
+                        Öppna Backlog
+                    </a>
+                    <button class="btn btn-ghost btn-sm" @onclick="ResetImport">Ladda upp igen</button>
+                </div>
+            }
 
-            <details style="margin-top:0.5rem">
-                <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--safir)">
-                    Visa skapade work items (@importResults.Count st)
-                </summary>
-                <table class="data-table" style="margin-top:0.5rem; font-size:0.85rem">
-                    <thead><tr><th>Typ</th><th>Titel</th><th>ID</th></tr></thead>
-                    <tbody>
-                        @foreach (var item in importResults)
-                        {
-                            <tr>
-                                <td><span class="wi-badge wi-@item.Type.ToLower()">@item.Type</span></td>
-                                <td>@item.Title</td>
-                                <td><a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_workitems/edit/@item.Id" target="_blank">@item.Id</a></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </details>
-
-            <div style="margin-top:1rem; display:flex; gap:0.5rem">
-                <a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_backlogs" target="_blank" class="btn btn-secondary">
-                    Öppna Backlog i DevOps
-                </a>
-                <button class="btn btn-outline btn-sm" @onclick="ResetImport">Ladda upp igen</button>
-            </div>
-        }
-
-        @if (importError != null)
-        {
-            <div class="alert alert-error" style="margin-top:1rem">
-                <strong>Fel:</strong> @importError
-            </div>
-            <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" @onclick="ResetImport">Försök igen</button>
-        }
-    }
+            @if (importError != null)
+            {
+                <div class="import-error">
+                    <span class="error-icon">❌</span>
+                    <span>@importError</span>
+                    <button class="btn btn-ghost btn-sm" @onclick="ResetImport">Försök igen</button>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 @code {
@@ -201,11 +287,26 @@
     private ProgressInfo? importProgress;
     private List<PushResult>? importResults;
     private string? importError;
+    private bool showAllEpics = false;
 
-    private int totalItems => Data.DevOpsStructure.Epics.Count
+    private int GetTotalWorkItems() => Data.DevOpsStructure.Epics.Count
         + Data.DevOpsStructure.Epics.Sum(e => e.Features.Count)
         + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Count))
         + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Tasks.Count)));
+
+    private int GetTotalEstimatedHours() => Data.DevOpsStructure.Epics
+        .Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Estimate)));
+
+    private int GetEpicHours(Epic epic) => epic.Features.Sum(f => f.Requirements.Sum(r => r.Estimate));
+    
+    private int GetFeatureHours(Feature feature) => feature.Requirements.Sum(r => r.Estimate);
+
+    private string GetRiskLevel(Risk risk) => risk.RiskValue switch
+    {
+        >= 12 => "high",
+        >= 6 => "medium",
+        _ => "low"
+    };
 
     private async Task ImportToDevOps()
     {
@@ -271,20 +372,32 @@
 
     private string GenerateWorkItemsCsv()
     {
-        var lines = new List<string> { "Type,Title,Parent,Effort,Estimate" };
+        var lines = new List<string> { "ID,Work Item Type,Order,Area Path,Title 1,Title 2,Title 3,Title 4,Title 5,Description,State,Effort,Original Estimate,Remaining" };
+        var areaPath = Data.AreaPath;
+        
+        // First line: Root Epic with project title
+        lines.Add($",Epic,2829,{areaPath},{EscapeCsv(Data.MainTitle)},,,,,,Proposed,,,");
         
         foreach (var epic in Data.DevOpsStructure.Epics)
         {
-            lines.Add($"Epic,\"{EscapeCsv(epic.Title)}\",,,,");
+            // Epic as Title 2
+            lines.Add($",Epic,,{areaPath},,{EscapeCsv(epic.Title)},,,,,,Proposed,,,");
+            
             foreach (var feature in epic.Features)
             {
-                lines.Add($"Feature,\"{EscapeCsv(feature.Title)}\",\"{EscapeCsv(epic.Title)}\",{feature.Effort},");
+                // Feature as Title 3, with Effort
+                var featureEffort = feature.Requirements.Sum(r => r.Estimate);
+                lines.Add($",Feature,,{areaPath},,,{EscapeCsv(feature.Title)},,,,,Proposed,{featureEffort},,");
+                
                 foreach (var req in feature.Requirements)
                 {
-                    lines.Add($"Requirement,\"{EscapeCsv(req.Title)}\",\"{EscapeCsv(feature.Title)}\",,{req.Estimate}");
+                    // Requirement as Title 4, with Original Estimate and Remaining
+                    lines.Add($",Requirement,,{areaPath},,,,{EscapeCsv(req.Title)},,,Proposed,,{req.Estimate},{req.Estimate}");
+                    
                     foreach (var task in req.Tasks)
                     {
-                        lines.Add($"Task,\"{EscapeCsv(task.Title)}\",\"{EscapeCsv(req.Title)}\",,");
+                        // Task as Title 5
+                        lines.Add($",Task,,{areaPath},,,,,{EscapeCsv(task.Title)},,Proposed,,,");
                     }
                 }
             }

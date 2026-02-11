@@ -1,46 +1,44 @@
 @* Steg 3: DevOps-struktur med drag & drop *@
 @inject IJSRuntime JS
 
-<!-- Floating Budget Sidebar -->
-<div class="budget-sidebar @GetBudgetStatusClass()">
-    <div class="budget-sidebar-header">
-        <span class="budget-icon">📊</span>
-        <span>Budgetstatus</span>
-    </div>
-    <div class="budget-sidebar-content">
-        <div class="budget-item">
-            <span class="budget-label">Budget</span>
-            <span class="budget-value">@Data.BudgetHours h</span>
+<!-- Sticky Budget Topbar -->
+<div class="budget-topbar @GetBudgetStatusClass()">
+    <div class="budget-topbar-content">
+        <div class="budget-topbar-item">
+            <span class="budget-icon">📊</span>
+            <span class="budget-topbar-label">Budget</span>
+            <span class="budget-topbar-value">@Data.BudgetHours h</span>
         </div>
-        <div class="budget-item">
-            <span class="budget-label">Estimerat</span>
-            <span class="budget-value">@GetTotalHours() h</span>
+        <div class="budget-topbar-divider"></div>
+        <div class="budget-topbar-item">
+            <span class="budget-topbar-label">Estimerat</span>
+            <span class="budget-topbar-value">@GetTotalHours() h</span>
         </div>
-        <div class="budget-divider"></div>
-        <div class="budget-item difference">
-            <span class="budget-label">Differens</span>
-            <span class="budget-value @(GetDifference() >= 0 ? "under-budget" : "over-budget")">
+        <div class="budget-topbar-divider"></div>
+        <div class="budget-topbar-item">
+            <span class="budget-topbar-label">Differens</span>
+            <span class="budget-topbar-value @(GetDifference() >= 0 ? "under-budget" : "over-budget")">
                 @(GetDifference() >= 0 ? "+" : "")@GetDifference() h
             </span>
         </div>
-        <div class="budget-progress-container">
-            <div class="budget-progress-bar">
-                <div class="budget-progress-fill" style="width: @GetProgressPercent()%"></div>
+        <div class="budget-topbar-progress">
+            <div class="budget-topbar-progress-bar">
+                <div class="budget-topbar-progress-fill" style="width: @Math.Min(GetProgressPercent(), 100)%"></div>
             </div>
-            <span class="budget-progress-text">@GetProgressPercent()% av budget</span>
+            <span class="budget-topbar-progress-text">@GetProgressPercent()%</span>
         </div>
-        <div class="budget-status-text">
+        <div class="budget-topbar-status">
             @if (GetDifference() > 0)
             {
-                <span class="status-good">✓ @GetDifference() h under budget</span>
+                <span class="status-good">✓ Under budget</span>
             }
             else if (GetDifference() == 0)
             {
-                <span class="status-perfect">✓ Exakt på budget</span>
+                <span class="status-perfect">✓ Exakt</span>
             }
             else
             {
-                <span class="status-warning">⚠ @Math.Abs(GetDifference()) h över budget</span>
+                <span class="status-warning">⚠ Över budget</span>
             }
         </div>
     </div>
