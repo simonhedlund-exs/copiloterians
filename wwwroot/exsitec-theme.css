@@ -1,0 +1,159 @@
+/* =========================================
+   EXSITEC BRAND THEME 2025
+   Based on Brand Guidelines 2025
+========================================= */
+
+/* ======================
+   COLOR VARIABLES
+====================== */
+
+:root {
+    /* Primary */
+    --exsitec-black: #0e0e1e;
+    --exsitec-white: #fafafc;
+    --safir: #000f60;
+    --lolit: #7b4ce8;
+    --light-lolit: #a78dff;
+    --extra-light-lolit: #d8cfff;
+    --powder-lolit: #f1efff;
+    --exsitec-gray: #f2f2fa;
+
+    /* Validation */
+    --validation-green: #10862B;
+    --alert-red: #E41E04;
+
+    /* Typography */
+    --font-headline: 'Poppins', sans-serif;
+    --font-body: 'Overpass', sans-serif;
+}
+
+/* ======================
+   GLOBAL STYLES
+====================== */
+
+body {
+    background-color: var(--exsitec-gray);
+    color: var(--exsitec-black);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ideal line length for readability (45–80 chars) */
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ======================
+   TYPOGRAPHY
+====================== */
+
+h1, h2, h3, h4 {
+    font-family: var(--font-headline);
+    font-weight: 600;
+    color: var(--exsitec-black);
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+p {
+    font-size: 1rem;
+    font-family: var(--font-body);
+}
+
+/* Highlighted text */
+.highlight {
+    font-weight: 600;
+}
+
+/* ======================
+   BUTTONS
+====================== */
+
+.btn-primary {
+    background: var(--lolit);
+    color: var(--extra-light-lolit);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px; /* Soft rounded */
+    font-family: var(--font-headline);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--safir);
+    color: var(--extra-light-lolit);
+}
+
+.btn-dark {
+    background: var(--exsitec-black);
+    color: var(--exsitec-white);
+    border-radius: 999px;
+}
+
+/* ======================
+   CARDS
+====================== */
+
+.card {
+    background: var(--exsitec-white);
+    border-radius: 24px; /* Soft shapes */
+    padding: 2rem;
+    border: 1px solid rgba(14, 14, 30, 0.05);
+}
+
+.card-gradient {
+    background: linear-gradient(135deg, var(--lolit), var(--safir));
+    color: var(--exsitec-white);
+}
+
+/* ======================
+   INPUT FIELDS
+====================== */
+
+input, textarea {
+    font-family: var(--font-body);
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--exsitec-black);
+    background: var(--exsitec-white);
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--lolit);
+}
+
+/* ======================
+   TAGS
+====================== */
+
+.tag {
+    background: var(--extra-light-lolit);
+    color: var(--safir);
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+
+/* ======================
+   VALIDATION
+====================== */
+
+.text-success {
+    color: var(--validation-green);
+}
+
+.text-danger {
+    color: var(--alert-red);
+}
