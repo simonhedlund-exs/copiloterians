@@ -10,8 +10,84 @@
     @Body
 </main>
 
+<!-- Chatbot Widget -->
+<div class="chatbot-widget @(isChatOpen ? "open" : "")">
+    @if (isChatOpen)
+    {
+        <div class="chatbot-window">
+            <div class="chatbot-header">
+                <img src="assets/a53c9b1b-455a-488d-92b9-2b75a5e0dfcd.png" alt="Bot" class="chatbot-avatar-small" />
+                <span>Projektassistent</span>
+                <button class="chatbot-close" @onclick="() => isChatOpen = false">✕</button>
+            </div>
+            <div class="chatbot-messages">
+                <div class="chatbot-message bot">
+                    <img src="assets/a53c9b1b-455a-488d-92b9-2b75a5e0dfcd.png" alt="Bot" class="chatbot-msg-avatar" />
+                    <div class="chatbot-bubble">
+                        Hej! 👋 Jag är din projektassistent. Vad kan jag hjälpa dig med?
+                    </div>
+                </div>
+                <div class="chatbot-options">
+                    <button class="chatbot-option" @onclick="@(() => SelectOption("Hur skapar jag ett nytt projekt?"))">🚀 Hur skapar jag ett nytt projekt?</button>
+                    <button class="chatbot-option" @onclick="@(() => SelectOption("Förklara DevOps-strukturen"))">🏗️ Förklara DevOps-strukturen</button>
+                    <button class="chatbot-option" @onclick="@(() => SelectOption("Hur exporterar jag till CSV?"))">📄 Hur exporterar jag till CSV?</button>
+                    <button class="chatbot-option" @onclick="@(() => SelectOption("Vad är budgettimmarna?"))">⏱️ Vad är budgettimmarna?</button>
+                </div>
+                @if (selectedQuestion != null)
+                {
+                    <div class="chatbot-message user">
+                        <div class="chatbot-bubble user-bubble">
+                            @selectedQuestion
+                        </div>
+                    </div>
+                    <div class="chatbot-message bot">
+                        <img src="assets/a53c9b1b-455a-488d-92b9-2b75a5e0dfcd.png" alt="Bot" class="chatbot-msg-avatar" />
+                        <div class="chatbot-bubble">
+                            @GetBotResponse(selectedQuestion)
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="chatbot-input">
+                <input type="text" placeholder="Skriv ett meddelande..." disabled />
+                <button class="chatbot-send" disabled>➤</button>
+            </div>
+        </div>
+    }
+    <button class="chatbot-fab" @onclick="() => isChatOpen = !isChatOpen">
+        @if (isChatOpen)
+        {
+            <span class="fab-close">✕</span>
+        }
+        else
+        {
+            <img src="assets/a53c9b1b-455a-488d-92b9-2b75a5e0dfcd.png" alt="Chat" class="chatbot-avatar" />
+            <span class="chatbot-tooltip">Kan jag hjälpa dig?</span>
+        }
+    </button>
+</div>
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool isChatOpen = false;
+    private string? selectedQuestion = null;
+
+    private void SelectOption(string question)
+    {
+        selectedQuestion = question;
+    }
+
+    private string GetBotResponse(string question) => question switch
+    {
+        "Hur skapar jag ett nytt projekt?" => "För att skapa ett nytt projekt, börja med Steg 1 där du fyller i kundnamn och projekttitel. Gå sedan vidare genom stegen för att lägga till tidsplan, DevOps-struktur och slutligen exportera!",
+        "Förklara DevOps-strukturen" => "DevOps-strukturen består av en hierarki: Epics → Features → Requirements → Tasks. Varje nivå summerar timmarna uppåt. Du kan dra och släppa för att omorganisera!",
+        "Hur exporterar jag till CSV?" => "På sista steget (Exportera) klickar du på 'Ladda ner CSV'. Filen följer Azure DevOps importformat och kan importeras direkt i ditt projekt.",
+        "Vad är budgettimmarna?" => "Budgettimmarna sätts i Tidsplan-steget och representerar totalt antal timmar för projektet. DevOps-strukturen visar hur dina estimat förhåller sig till budgeten.",
+        _ => "Det kan jag tyvärr inte svara på just nu. Prova ett av alternativen ovan!"
+    };
+}

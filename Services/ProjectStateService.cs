@@ -21,9 +21,7 @@ public class ProjectStateService
 
     public bool CanGoNext()
     {
-        if (CurrentStep == 0)
-            return !string.IsNullOrWhiteSpace(Project.CustomerName) &&
-                   !string.IsNullOrWhiteSpace(Project.ProjectTitle);
+        // Alltid tillåt att gå vidare
         return true;
     }
 
