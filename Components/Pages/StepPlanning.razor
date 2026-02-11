@@ -1,0 +1,82 @@
+@* Steg 3: Planering *@
+
+<div class="card">
+    <h2>Tidsplan</h2>
+    <p class="subtitle">Ange projektets tidsram och kapacitet</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Projektstart</label>
+            <input type="date" value="@Data.ProjectStart?.ToString("yyyy-MM-dd")"
+                   @onchange="e => Data.ProjectStart = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null" />
+        </div>
+        <div class="form-group">
+            <label>Go-live</label>
+            <input type="date" value="@Data.GoLive?.ToString("yyyy-MM-dd")"
+                   @onchange="e => Data.GoLive = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Budgeterade timmar</label>
+            <input type="number" @bind="Data.BudgetHours" min="0" step="10" />
+        </div>
+        <div class="form-group">
+            <label>Tempo (timmar/vecka)</label>
+            <input type="number" @bind="Data.WeeklyPace" min="1" step="5" />
+        </div>
+    </div>
+
+    @if (Data.BudgetHours > 0 && Data.WeeklyPace > 0)
+    {
+        <div class="alert alert-info">
+            <strong>Uppskattad projektlängd:</strong> ca @Data.EstimatedWeeks veckor
+            (@Data.BudgetHours h / @Data.WeeklyPace h per vecka)
+        </div>
+    }
+</div>
+
+<div class="card">
+    <h2>Milstolpar</h2>
+    <p class="subtitle">Lägg till viktiga milstolpar och aktiviteter</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Delprojekt</th>
+                <th>Aktivitet</th>
+                <th>Startdatum</th>
+                <th>Slutdatum</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Data.Milestones.Count; i++)
+            {
+                var idx = i;
+                var ms = Data.Milestones[idx];
+                <tr>
+                    <td><input type="text" @bind="ms.Subproject" @bind:event="oninput" placeholder="Delprojekt" /></td>
+                    <td><input type="text" @bind="ms.Activity" @bind:event="oninput" placeholder="Aktivitet" /></td>
+                    <td>
+                        <input type="date" value="@ms.StartDate?.ToString("yyyy-MM-dd")"
+                               @onchange="e => ms.StartDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null" />
+                    </td>
+                    <td>
+                        <input type="date" value="@ms.EndDate?.ToString("yyyy-MM-dd")"
+                               @onchange="e => ms.EndDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null" />
+                    </td>
+                    <td>
+                        <button class="remove-btn" @onclick="() => Data.Milestones.RemoveAt(idx)">✕</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="add-btn" @onclick="() => Data.Milestones.Add(new Milestone())">+ Lägg till milstolpe</button>
+</div>
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+}

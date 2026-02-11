@@ -1,0 +1,98 @@
+@* Steg 5: DevOps-struktur *@
+
+<div class="card">
+    <h2>Azure DevOps-struktur</h2>
+    <p class="subtitle">Anpassa Work Item-hierarkin som ska skapas i Azure DevOps</p>
+
+    <div class="devops-tree">
+        @for (int ei = 0; ei < Data.DevOpsStructure.Epics.Count; ei++)
+        {
+            var epicIdx = ei;
+            var epic = Data.DevOpsStructure.Epics[epicIdx];
+            <div class="tree-epic">
+                <div class="tree-epic-header">
+                    <span class="type-badge epic">Epic</span>
+                    <input type="text" @bind="epic.Title" @bind:event="oninput" />
+                    @if (epicIdx > 0)
+                    {
+                        <button class="remove-btn" style="color:rgba(255,255,255,0.7)"
+                                @onclick="() => Data.DevOpsStructure.Epics.RemoveAt(epicIdx)">✕</button>
+                    }
+                </div>
+
+                <div style="padding: 0.5rem 1rem;">
+                    @for (int fi = 0; fi < epic.Features.Count; fi++)
+                    {
+                        var featureIdx = fi;
+                        var feature = epic.Features[featureIdx];
+                        <div class="tree-feature">
+                            <div class="tree-feature-header">
+                                <span class="type-badge feature">Feature</span>
+                                <input type="text" @bind="feature.Title" @bind:event="oninput" />
+                                <input type="number" @bind="feature.Effort" min="0"
+                                       style="width:60px" title="Effort" placeholder="Effort" />
+                                <button class="remove-btn"
+                                        @onclick="() => epic.Features.RemoveAt(featureIdx)">✕</button>
+                            </div>
+
+                            @for (int ri = 0; ri < feature.Requirements.Count; ri++)
+                            {
+                                var reqIdx = ri;
+                                var req = feature.Requirements[reqIdx];
+                                <div class="tree-requirement">
+                                    <span class="type-badge requirement">Req</span>
+                                    <input type="text" @bind="req.Title" @bind:event="oninput" />
+                                    <input type="number" @bind="req.Estimate" min="0"
+                                           style="width:55px" title="Estimat (h)" placeholder="h" />
+                                    <button class="remove-btn"
+                                            @onclick="() => feature.Requirements.RemoveAt(reqIdx)">✕</button>
+                                </div>
+
+                                @for (int ti = 0; ti < req.Tasks.Count; ti++)
+                                {
+                                    var taskIdx = ti;
+                                    var task = req.Tasks[taskIdx];
+                                    <div class="tree-task">
+                                        <span class="type-badge task">Task</span>
+                                        <input type="text" @bind="task.Title" @bind:event="oninput" />
+                                        <button class="remove-btn"
+                                                @onclick="() => req.Tasks.RemoveAt(taskIdx)">✕</button>
+                                    </div>
+                                }
+                                <div class="tree-task">
+                                    <button class="add-btn" style="width:auto; font-size:0.75rem; padding:0.2rem 0.5rem; margin:0"
+                                            @onclick="() => AddTask(req)">+ Task</button>
+                                </div>
+                            }
+                            <div style="margin-left:1.5rem; margin-top:0.3rem">
+                                <button class="add-btn" style="width:auto; font-size:0.75rem; padding:0.2rem 0.5rem; margin:0"
+                                        @onclick="() => AddRequirement(feature)">+ Requirement</button>
+                            </div>
+                        </div>
+                    }
+                    <button class="add-btn" style="font-size:0.8rem"
+                            @onclick="() => AddFeature(epic)">+ Feature</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button class="add-btn" @onclick="AddEpic">+ Lägg till Epic</button>
+</div>
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private void AddEpic()
+    {
+        Data.DevOpsStructure.Epics.Add(new Epic
+        {
+            Title = "Ny epic",
+            Features = new() { new Feature { Title = "Ny feature" } }
+        });
+    }
+
+    private void AddFeature(Epic epic) => epic.Features.Add(new Feature { Title = "Ny feature" });
+    private void AddRequirement(Feature feature) => feature.Requirements.Add(new Requirement { Title = "Nytt krav" });
+    private void AddTask(Requirement req) => req.Tasks.Add(new DevOpsTask { Title = "Ny task" });
+}

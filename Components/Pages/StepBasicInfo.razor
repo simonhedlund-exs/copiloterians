@@ -1,0 +1,51 @@
+@* Steg 1: Grundläggande projektinformation *@
+
+<div class="card">
+    <h2>Projektinformation</h2>
+    <p class="subtitle">Fyll i grundläggande information om projektet</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Kundnamn *</label>
+            <input type="text" @bind="Data.CustomerName" @bind:event="oninput" placeholder="T.ex. Acme AB" />
+        </div>
+        <div class="form-group">
+            <label>Teamnamn</label>
+            <input type="text" @bind="Data.TeamName" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Projekttitel *</label>
+        <input type="text" @bind="Data.ProjectTitle" @bind:event="oninput" placeholder="T.ex. Integration Visma - HubSpot" />
+    </div>
+
+    <div class="form-group">
+        <label>Projektbeskrivning</label>
+        <textarea rows="3" @bind="Data.ProjectDescription" @bind:event="oninput"
+                  placeholder="Kort beskrivning av projektets syfte och mål"></textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>System A</label>
+            <input type="text" @bind="Data.SystemA" @bind:event="oninput" placeholder="T.ex. Visma" />
+        </div>
+        <div class="form-group">
+            <label>System B</label>
+            <input type="text" @bind="Data.SystemB" @bind:event="oninput" placeholder="T.ex. HubSpot" />
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Data.CustomerName) && !string.IsNullOrWhiteSpace(Data.ProjectTitle))
+    {
+        <div class="alert alert-info">
+            <strong>Area Path:</strong> @Data.AreaPath<br />
+            <strong>Huvud-Epic:</strong> @Data.MainTitle
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+}

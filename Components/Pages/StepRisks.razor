@@ -1,0 +1,92 @@
+@* Steg 4: Risker *@
+
+<div class="card">
+    <h2>Riskanalys</h2>
+    <p class="subtitle">Välj och anpassa risker för projektet. Markera de som är relevanta.</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width:40px">Välj</th>
+                <th>Risk</th>
+                <th>Kategori</th>
+                <th style="width:50px">S</th>
+                <th style="width:50px">K</th>
+                <th style="width:50px">R</th>
+                <th style="width:70px">Prioritet</th>
+                <th>Ägare</th>
+                <th>Strategi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var risk in Data.Risks)
+            {
+                <tr style="opacity: @(risk.Selected ? "1" : "0.5")">
+                    <td>
+                        <input type="checkbox" @bind="risk.Selected" />
+                    </td>
+                    <td>
+                        <input type="text" @bind="risk.Title" @bind:event="oninput"
+                               style="font-weight:600; border:none; background:transparent; padding:0; width:100%"
+                               title="@risk.Description" />
+                    </td>
+                    <td>
+                        <select @bind="risk.Category" style="font-size:0.75rem">
+                            <option value="Teknik">Teknik</option>
+                            <option value="Organisation">Organisation</option>
+                            <option value="Krav">Krav</option>
+                            <option value="Planering">Planering</option>
+                            <option value="Ekonomi">Ekonomi</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" @bind="risk.Probability" min="1" max="5" style="width:45px" title="Sannolikhet (1-5)" />
+                    </td>
+                    <td>
+                        <input type="number" @bind="risk.Impact" min="1" max="5" style="width:45px" title="Konsekvens (1-5)" />
+                    </td>
+                    <td>
+                        <span class="risk-badge @risk.PriorityClass">@risk.RiskValue</span>
+                    </td>
+                    <td>
+                        <span class="risk-badge @risk.PriorityClass">@risk.Priority</span>
+                    </td>
+                    <td>
+                        <input type="text" @bind="risk.Owner" @bind:event="oninput" style="font-size:0.75rem" />
+                    </td>
+                    <td>
+                        <select @bind="risk.Strategy" style="font-size:0.75rem">
+                            <option value="Undvik">Undvik</option>
+                            <option value="Minska">Minska</option>
+                            <option value="Överför">Överför</option>
+                            <option value="Acceptera">Acceptera</option>
+                        </select>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div style="margin-top: 1rem; font-size: 0.8rem; color: #666;">
+        <strong>S</strong> = Sannolikhet (1-5), <strong>K</strong> = Konsekvens (1-5), <strong>R</strong> = Riskvärde (S × K)
+    </div>
+
+    <button class="add-btn" @onclick="AddRisk">+ Lägg till egen risk</button>
+</div>
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private void AddRisk()
+    {
+        Data.Risks.Add(new Risk
+        {
+            Id = Data.Risks.Count + 1,
+            Title = "Ny risk",
+            Selected = true,
+            Probability = 2,
+            Impact = 3,
+            Category = "Teknik"
+        });
+    }
+}

@@ -1,0 +1,82 @@
+﻿@page "/"
+@inject ProjectStateService State
+@rendermode InteractiveServer
+
+<PageTitle>Projektverktyg - Exsitec</PageTitle>
+
+@{
+    var steps = new[] { "Grundinfo", "Projektgrupp", "Planering", "Risker", "DevOps-struktur", "Exportera" };
+}
+
+<div class="stepper">
+    @for (int i = 0; i < steps.Length; i++)
+    {
+        var idx = i;
+        var css = idx == State.CurrentStep ? "active" : idx < State.CurrentStep ? "completed" : "";
+        <div class="stepper-item @css" @onclick="() => State.GoToStep(idx)">
+            <div class="stepper-number">
+                @if (idx < State.CurrentStep)
+                {
+                    <span>&#10003;</span>
+                }
+                else
+                {
+                    @(idx + 1)
+                }
+            </div>
+            <span class="stepper-label">@steps[idx]</span>
+        </div>
+        @if (idx < steps.Length - 1)
+        {
+            <div class="stepper-line @(idx < State.CurrentStep ? "completed" : "")"></div>
+        }
+    }
+</div>
+
+<div class="wizard-content">
+    @switch (State.CurrentStep)
+    {
+        case 0:
+            <StepBasicInfo Data="State.Project" />
+            break;
+        case 1:
+            <StepTeam Data="State.Project" />
+            break;
+        case 2:
+            <StepPlanning Data="State.Project" />
+            break;
+        case 3:
+            <StepRisks Data="State.Project" />
+            break;
+        case 4:
+            <StepDevOpsStructure Data="State.Project" />
+            break;
+        case 5:
+            <StepExport Data="State.Project" />
+            break;
+    }
+
+    <div class="button-row">
+        <button class="btn btn-outline" @onclick="State.PreviousStep" disabled="@(State.CurrentStep == 0)">
+            &#8592; Föregående
+        </button>
+        @if (State.CurrentStep < 5)
+        {
+            <button class="btn btn-primary" @onclick="State.NextStep" disabled="@(!State.CanGoNext())">
+                Nästa &#8594;
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        State.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= StateHasChanged;
+    }
+}

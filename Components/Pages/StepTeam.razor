@@ -1,0 +1,100 @@
+@* Steg 2: Projektgrupp *@
+
+<div class="card">
+    <h2>Projektgrupp – Exsitec</h2>
+    <p class="subtitle">Lägg till teammedlemmar från Exsitec</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Namn</th>
+                <th>Roll</th>
+                <th>Grupp</th>
+                <th>E-post</th>
+                <th>Telefon</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Data.ExsitecMembers.Count; i++)
+            {
+                var idx = i;
+                var member = Data.ExsitecMembers[idx];
+                <tr>
+                    <td><input type="text" @bind="member.Name" @bind:event="oninput" placeholder="Namn" /></td>
+                    <td>
+                        <select @bind="member.Role">
+                            <option value="Projektledare">Projektledare</option>
+                            <option value="Lösningsarkitekt">Lösningsarkitekt</option>
+                            <option value="Utvecklare">Utvecklare</option>
+                            <option value="Testare">Testare</option>
+                            <option value="Säljare">Säljare</option>
+                            <option value="">Annan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select @bind="member.Group">
+                            <option value="PG">PG</option>
+                            <option value="SG">SG</option>
+                            <option value="RG">RG</option>
+                        </select>
+                    </td>
+                    <td><input type="email" @bind="member.Email" @bind:event="oninput" placeholder="E-post" /></td>
+                    <td><input type="tel" @bind="member.Phone" @bind:event="oninput" placeholder="Telefon" /></td>
+                    <td>
+                        @if (Data.ExsitecMembers.Count > 1)
+                        {
+                            <button class="remove-btn" @onclick="() => Data.ExsitecMembers.RemoveAt(idx)">✕</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="add-btn" @onclick="AddExsitecMember">+ Lägg till Exsitec-medlem</button>
+</div>
+
+<div class="card">
+    <h2>Projektgrupp – Kund</h2>
+    <p class="subtitle">Kontaktpersoner hos kunden</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Namn</th>
+                <th>Roll</th>
+                <th>E-post</th>
+                <th>Telefon</th>
+                <th>Kommentar</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Data.CustomerMembers.Count; i++)
+            {
+                var idx = i;
+                var member = Data.CustomerMembers[idx];
+                <tr>
+                    <td><input type="text" @bind="member.Name" @bind:event="oninput" placeholder="Namn" /></td>
+                    <td><input type="text" @bind="member.Role" @bind:event="oninput" placeholder="Roll" /></td>
+                    <td><input type="email" @bind="member.Email" @bind:event="oninput" placeholder="E-post" /></td>
+                    <td><input type="tel" @bind="member.Phone" @bind:event="oninput" placeholder="Telefon" /></td>
+                    <td><input type="text" @bind="member.Comment" @bind:event="oninput" placeholder="Kommentar" /></td>
+                    <td>
+                        @if (Data.CustomerMembers.Count > 1)
+                        {
+                            <button class="remove-btn" @onclick="() => Data.CustomerMembers.RemoveAt(idx)">✕</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="add-btn" @onclick="() => Data.CustomerMembers.Add(new TeamMember())">+ Lägg till kundkontakt</button>
+</div>
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private void AddExsitecMember() => Data.ExsitecMembers.Add(new TeamMember { Group = "PG" });
+}
