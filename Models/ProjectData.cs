@@ -28,7 +28,8 @@ public class ProjectData
     public int WeeklyPace { get; set; } = 20;
     public List<Milestone> Milestones { get; set; } = new();
 
-    // Steg 4: Risker
+    // Risker (valfritt)
+    public bool IncludeRisks { get; set; } = false;
     public List<Risk> Risks { get; set; } = DefaultData.GetDefaultRisks();
 
     // Steg 5: DevOps-struktur
@@ -38,6 +39,9 @@ public class ProjectData
     public string DevOpsOrg { get; set; } = "";
     public string DevOpsProject { get; set; } = "";
     public string DevOpsPat { get; set; } = "";
+    
+    // Webbtid koppling
+    public string WebbtidToken { get; set; } = "";
 
     // DevOps setup config
     public string ProcessTemplate { get; set; } = "CMMI";

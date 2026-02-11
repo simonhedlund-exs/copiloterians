@@ -503,6 +503,319 @@ h1, h2, h3, h4 {
 .type-badge.requirement { background: #fef3c7; color: #92400e; }
 .type-badge.task { background: #d1fae5; color: #065f46; }
 
+/* Hours badge for calculated totals */
+.hours-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 45px;
+    text-align: center;
+}
+
+.hours-badge.epic-hours {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.hours-badge.feature-hours {
+    background: var(--safir);
+    color: white;
+}
+
+/* Total hours banner */
+.total-hours-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--lolit), var(--safir));
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.total-hours-banner strong {
+    font-size: 1.5rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Floating Budget Sidebar */
+.budget-sidebar {
+    position: fixed;
+    right: 20px;
+    top: 120px;
+    width: 220px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,15,96,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.budget-sidebar.budget-under {
+    border: 2px solid #10b981;
+}
+
+.budget-sidebar.budget-exact {
+    border: 2px solid var(--lolit);
+}
+
+.budget-sidebar.budget-over {
+    border: 2px solid #ef4444;
+}
+
+.budget-sidebar-header {
+    background: var(--safir);
+    color: white;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.budget-icon {
+    font-size: 1.1rem;
+}
+
+.budget-sidebar-content {
+    padding: 1rem;
+}
+
+.budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+}
+
+.budget-item.difference {
+    padding-top: 0.6rem;
+}
+
+.budget-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.budget-value {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--safir);
+}
+
+.budget-value.under-budget {
+    color: #10b981;
+}
+
+.budget-value.over-budget {
+    color: #ef4444;
+}
+
+.budget-divider {
+    height: 1px;
+    background: #eee;
+    margin: 0.5rem 0;
+}
+
+.budget-progress-container {
+    margin-top: 0.75rem;
+}
+
+.budget-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.budget-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lolit), var(--safir));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.budget-over .budget-progress-fill {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.budget-progress-text {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 0.3rem;
+}
+
+.budget-status-text {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.budget-status-text .status-good {
+    color: #10b981;
+}
+
+.budget-status-text .status-perfect {
+    color: var(--lolit);
+}
+
+.budget-status-text .status-warning {
+    color: #ef4444;
+}
+
+.budget-under .budget-status-text {
+    background: #ecfdf5;
+}
+
+.budget-exact .budget-status-text {
+    background: var(--powder-lolit);
+}
+
+.budget-over .budget-status-text {
+    background: #fef2f2;
+}
+
+/* Responsive: hide sidebar on small screens */
+@media (max-width: 1200px) {
+    .budget-sidebar {
+        position: static;
+        width: 100%;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+}
+
+/* Drag & Drop styles */
+.drag-handle {
+    cursor: grab;
+    color: #999;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.tree-epic[draggable="true"],
+.tree-feature[draggable="true"],
+.tree-requirement[draggable="true"],
+.tree-task[draggable="true"] {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tree-epic.drag-over,
+.tree-feature.drag-over,
+.tree-requirement.drag-over,
+.tree-task.drag-over {
+    outline: 2px dashed var(--lolit);
+    outline-offset: 2px;
+}
+
+.tree-epic[draggable="true"]:active,
+.tree-feature[draggable="true"]:active,
+.tree-requirement[draggable="true"]:active,
+.tree-task[draggable="true"]:active {
+    opacity: 0.6;
+}
+
+/* Toggle switch for optional features */
+.toggle-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+}
+
+.toggle-option:hover {
+    border-color: var(--lolit);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--lolit);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.toggle-label strong {
+    font-family: 'Poppins', sans-serif;
+    color: var(--safir);
+    font-size: 0.95rem;
+}
+
+.toggle-label span {
+    color: #666;
+    font-size: 0.8rem;
+}
+
 /* Export section */
 .export-grid {
     display: grid;

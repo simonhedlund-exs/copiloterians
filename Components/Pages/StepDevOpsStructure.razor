@@ -1,18 +1,111 @@
-@* Steg 5: DevOps-struktur *@
+@* Steg 3: DevOps-struktur med drag & drop *@
+@inject IJSRuntime JS
+
+<!-- Floating Budget Sidebar -->
+<div class="budget-sidebar @GetBudgetStatusClass()">
+    <div class="budget-sidebar-header">
+        <span class="budget-icon">📊</span>
+        <span>Budgetstatus</span>
+    </div>
+    <div class="budget-sidebar-content">
+        <div class="budget-item">
+            <span class="budget-label">Budget</span>
+            <span class="budget-value">@Data.BudgetHours h</span>
+        </div>
+        <div class="budget-item">
+            <span class="budget-label">Estimerat</span>
+            <span class="budget-value">@GetTotalHours() h</span>
+        </div>
+        <div class="budget-divider"></div>
+        <div class="budget-item difference">
+            <span class="budget-label">Differens</span>
+            <span class="budget-value @(GetDifference() >= 0 ? "under-budget" : "over-budget")">
+                @(GetDifference() >= 0 ? "+" : "")@GetDifference() h
+            </span>
+        </div>
+        <div class="budget-progress-container">
+            <div class="budget-progress-bar">
+                <div class="budget-progress-fill" style="width: @GetProgressPercent()%"></div>
+            </div>
+            <span class="budget-progress-text">@GetProgressPercent()% av budget</span>
+        </div>
+        <div class="budget-status-text">
+            @if (GetDifference() > 0)
+            {
+                <span class="status-good">✓ @GetDifference() h under budget</span>
+            }
+            else if (GetDifference() == 0)
+            {
+                <span class="status-perfect">✓ Exakt på budget</span>
+            }
+            else
+            {
+                <span class="status-warning">⚠ @Math.Abs(GetDifference()) h över budget</span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Webbtid-koppling</h2>
+    <p class="subtitle">Ange token för att koppla projektet till Webbtid</p>
+
+    <div class="form-group">
+        <label>Webbtid API Token</label>
+        <input type="password" @bind="Data.WebbtidToken" @bind:event="oninput" 
+               placeholder="Ange din Webbtid API-token" />
+    </div>
+</div>
+
+<div class="card">
+    <h2>Mallar</h2>
+    <p class="subtitle">Välj en befintlig mall eller spara den nuvarande strukturen som en ny mall</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Välj mall</label>
+            <select @bind="selectedTemplate" @bind:after="LoadSelectedTemplate">
+                <option value="">-- Välj mall --</option>
+                <option value="default">Standardmall</option>
+                @foreach (var template in savedTemplates)
+                {
+                    <option value="@template.Name">@template.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Spara som ny mall</label>
+            <div style="display:flex; gap:0.5rem">
+                <input type="text" @bind="newTemplateName" placeholder="Mallnamn" />
+                <button class="btn btn-secondary btn-sm" @onclick="SaveAsTemplate" 
+                        disabled="@string.IsNullOrWhiteSpace(newTemplateName)">Spara</button>
+            </div>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(templateMessage))
+    {
+        <div class="alert alert-info">@templateMessage</div>
+    }
+</div>
 
 <div class="card">
     <h2>Azure DevOps-struktur</h2>
-    <p class="subtitle">Anpassa Work Item-hierarkin som ska skapas i Azure DevOps</p>
+    <p class="subtitle">Anpassa Work Item-hierarkin. Timmar beräknas automatiskt från Requirements.</p>
 
     <div class="devops-tree">
         @for (int ei = 0; ei < Data.DevOpsStructure.Epics.Count; ei++)
         {
             var epicIdx = ei;
             var epic = Data.DevOpsStructure.Epics[epicIdx];
+            var epicHours = GetEpicHours(epic);
             <div class="tree-epic">
                 <div class="tree-epic-header">
+                    <span class="drag-handle" draggable="true" @ondragstart="() => StartDragEpic(epicIdx)"
+                          @ondrop="() => DropOnEpic(epicIdx)" @ondrop:preventDefault @ondragover:preventDefault>⋮⋮</span>
                     <span class="type-badge epic">Epic</span>
                     <input type="text" @bind="epic.Title" @bind:event="oninput" />
+                    <span class="hours-badge epic-hours" title="Summa av alla features">@epicHours h</span>
                     @if (epicIdx > 0)
                     {
                         <button class="remove-btn" style="color:rgba(255,255,255,0.7)"
@@ -25,12 +118,14 @@
                     {
                         var featureIdx = fi;
                         var feature = epic.Features[featureIdx];
+                        var featureHours = GetFeatureHours(feature);
                         <div class="tree-feature">
                             <div class="tree-feature-header">
+                                <span class="drag-handle" draggable="true" @ondragstart="() => StartDragFeature(epicIdx, featureIdx)"
+                                      @ondrop="() => DropOnFeature(epicIdx, featureIdx)" @ondrop:preventDefault @ondragover:preventDefault>⋮⋮</span>
                                 <span class="type-badge feature">Feature</span>
                                 <input type="text" @bind="feature.Title" @bind:event="oninput" />
-                                <input type="number" @bind="feature.Effort" min="0"
-                                       style="width:60px" title="Effort" placeholder="Effort" />
+                                <span class="hours-badge feature-hours" title="Summa av alla requirements">@featureHours h</span>
                                 <button class="remove-btn"
                                         @onclick="() => epic.Features.RemoveAt(featureIdx)">✕</button>
                             </div>
@@ -40,6 +135,8 @@
                                 var reqIdx = ri;
                                 var req = feature.Requirements[reqIdx];
                                 <div class="tree-requirement">
+                                    <span class="drag-handle" draggable="true" @ondragstart="() => StartDragRequirement(epicIdx, featureIdx, reqIdx)"
+                                          @ondrop="() => DropOnRequirement(epicIdx, featureIdx, reqIdx)" @ondrop:preventDefault @ondragover:preventDefault>⋮⋮</span>
                                     <span class="type-badge requirement">Req</span>
                                     <input type="text" @bind="req.Title" @bind:event="oninput" />
                                     <input type="number" @bind="req.Estimate" min="0"
@@ -53,6 +150,8 @@
                                     var taskIdx = ti;
                                     var task = req.Tasks[taskIdx];
                                     <div class="tree-task">
+                                        <span class="drag-handle" draggable="true" @ondragstart="() => StartDragTask(epicIdx, featureIdx, reqIdx, taskIdx)"
+                                              @ondrop="() => DropOnTask(epicIdx, featureIdx, reqIdx, taskIdx)" @ondrop:preventDefault @ondragover:preventDefault>⋮⋮</span>
                                         <span class="type-badge task">Task</span>
                                         <input type="text" @bind="task.Title" @bind:event="oninput" />
                                         <button class="remove-btn"
@@ -83,6 +182,203 @@
 @code {
     [Parameter] public ProjectData Data { get; set; } = default!;
 
+    private string? dragType;
+    private int dragEpicIdx;
+    private int dragFeatureIdx;
+    private int dragReqIdx;
+    private int dragTaskIdx;
+
+    private string selectedTemplate = "";
+    private string newTemplateName = "";
+    private string templateMessage = "";
+    private List<DevOpsTemplate> savedTemplates = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSavedTemplates();
+    }
+
+    // Budget calculation methods
+    private int GetDifference() => Data.BudgetHours - GetTotalHours();
+    
+    private int GetProgressPercent()
+    {
+        if (Data.BudgetHours <= 0) return 0;
+        var percent = (int)Math.Round(100.0 * GetTotalHours() / Data.BudgetHours);
+        return Math.Min(percent, 100);
+    }
+
+    private string GetBudgetStatusClass()
+    {
+        var diff = GetDifference();
+        if (diff > 0) return "budget-under";
+        if (diff == 0) return "budget-exact";
+        return "budget-over";
+    }
+
+    // Hour calculation methods
+    private int GetFeatureHours(Feature feature) => feature.Requirements.Sum(r => r.Estimate);
+    
+    private int GetEpicHours(Epic epic) => epic.Features.Sum(f => GetFeatureHours(f));
+    
+    private int GetTotalHours() => Data.DevOpsStructure.Epics.Sum(e => GetEpicHours(e));
+
+    // Template methods
+    private async Task LoadSavedTemplates()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string>("localStorage.getItem", "devops_templates");
+            if (!string.IsNullOrEmpty(json))
+            {
+                savedTemplates = System.Text.Json.JsonSerializer.Deserialize<List<DevOpsTemplate>>(json) ?? new();
+            }
+        }
+        catch { }
+    }
+
+    private async Task SaveTemplates()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(savedTemplates);
+        await JS.InvokeVoidAsync("localStorage.setItem", "devops_templates", json);
+    }
+
+    private async Task SaveAsTemplate()
+    {
+        if (string.IsNullOrWhiteSpace(newTemplateName)) return;
+
+        var template = new DevOpsTemplate
+        {
+            Name = newTemplateName,
+            Structure = CloneStructure(Data.DevOpsStructure)
+        };
+
+        savedTemplates.RemoveAll(t => t.Name == newTemplateName);
+        savedTemplates.Add(template);
+        await SaveTemplates();
+        
+        templateMessage = $"Mallen '{newTemplateName}' har sparats!";
+        newTemplateName = "";
+        StateHasChanged();
+        
+        await Task.Delay(3000);
+        templateMessage = "";
+        StateHasChanged();
+    }
+
+    private void LoadSelectedTemplate()
+    {
+        if (string.IsNullOrEmpty(selectedTemplate)) return;
+
+        if (selectedTemplate == "default")
+        {
+            Data.DevOpsStructure = DefaultData.GetDefaultDevOpsStructure();
+            templateMessage = "Standardmallen har laddats!";
+        }
+        else
+        {
+            var template = savedTemplates.FirstOrDefault(t => t.Name == selectedTemplate);
+            if (template != null)
+            {
+                Data.DevOpsStructure = CloneStructure(template.Structure);
+                templateMessage = $"Mallen '{selectedTemplate}' har laddats!";
+            }
+        }
+
+        selectedTemplate = "";
+        _ = ClearMessageAfterDelay();
+    }
+
+    private async Task ClearMessageAfterDelay()
+    {
+        await Task.Delay(3000);
+        templateMessage = "";
+        StateHasChanged();
+    }
+
+    private DevOpsStructure CloneStructure(DevOpsStructure source)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(source);
+        return System.Text.Json.JsonSerializer.Deserialize<DevOpsStructure>(json) ?? new();
+    }
+
+    // Drag & drop methods
+    private void StartDragEpic(int epicIdx)
+    {
+        dragType = "epic";
+        dragEpicIdx = epicIdx;
+    }
+
+    private void StartDragFeature(int epicIdx, int featureIdx)
+    {
+        dragType = "feature";
+        dragEpicIdx = epicIdx;
+        dragFeatureIdx = featureIdx;
+    }
+
+    private void StartDragRequirement(int epicIdx, int featureIdx, int reqIdx)
+    {
+        dragType = "requirement";
+        dragEpicIdx = epicIdx;
+        dragFeatureIdx = featureIdx;
+        dragReqIdx = reqIdx;
+    }
+
+    private void StartDragTask(int epicIdx, int featureIdx, int reqIdx, int taskIdx)
+    {
+        dragType = "task";
+        dragEpicIdx = epicIdx;
+        dragFeatureIdx = featureIdx;
+        dragReqIdx = reqIdx;
+        dragTaskIdx = taskIdx;
+    }
+
+    private void DropOnEpic(int targetIdx)
+    {
+        if (dragType == "epic" && dragEpicIdx != targetIdx)
+        {
+            MoveItem(Data.DevOpsStructure.Epics, dragEpicIdx, targetIdx);
+        }
+        dragType = null;
+    }
+
+    private void DropOnFeature(int epicIdx, int targetIdx)
+    {
+        if (dragType == "feature" && dragEpicIdx == epicIdx && dragFeatureIdx != targetIdx)
+        {
+            MoveItem(Data.DevOpsStructure.Epics[epicIdx].Features, dragFeatureIdx, targetIdx);
+        }
+        dragType = null;
+    }
+
+    private void DropOnRequirement(int epicIdx, int featureIdx, int targetIdx)
+    {
+        if (dragType == "requirement" && dragEpicIdx == epicIdx && dragFeatureIdx == featureIdx && dragReqIdx != targetIdx)
+        {
+            MoveItem(Data.DevOpsStructure.Epics[epicIdx].Features[featureIdx].Requirements, dragReqIdx, targetIdx);
+        }
+        dragType = null;
+    }
+
+    private void DropOnTask(int epicIdx, int featureIdx, int reqIdx, int targetIdx)
+    {
+        if (dragType == "task" && dragEpicIdx == epicIdx && dragFeatureIdx == featureIdx && dragReqIdx == reqIdx && dragTaskIdx != targetIdx)
+        {
+            MoveItem(Data.DevOpsStructure.Epics[epicIdx].Features[featureIdx].Requirements[reqIdx].Tasks, dragTaskIdx, targetIdx);
+        }
+        dragType = null;
+    }
+
+    private void MoveItem<T>(List<T> list, int fromIndex, int toIndex)
+    {
+        if (fromIndex < 0 || toIndex < 0 || fromIndex >= list.Count || toIndex >= list.Count)
+            return;
+
+        var item = list[fromIndex];
+        list.RemoveAt(fromIndex);
+        list.Insert(toIndex, item);
+    }
+
     private void AddEpic()
     {
         Data.DevOpsStructure.Epics.Add(new Epic
@@ -95,4 +391,10 @@
     private void AddFeature(Epic epic) => epic.Features.Add(new Feature { Title = "Ny feature" });
     private void AddRequirement(Feature feature) => feature.Requirements.Add(new Requirement { Title = "Nytt krav" });
     private void AddTask(Requirement req) => req.Tasks.Add(new DevOpsTask { Title = "Ny task" });
+
+    public class DevOpsTemplate
+    {
+        public string Name { get; set; } = "";
+        public DevOpsStructure Structure { get; set; } = new();
+    }
 }
