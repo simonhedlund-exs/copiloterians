@@ -39,6 +39,17 @@ public class ProjectData
     public string DevOpsProject { get; set; } = "";
     public string DevOpsPat { get; set; } = "";
 
+    // DevOps setup config
+    public string ProcessTemplate { get; set; } = "CMMI";
+    public int SprintCount { get; set; } = 10;
+    public int SprintLengthWeeks { get; set; } = 2;
+    public bool SetupCreateProject { get; set; } = true;
+    public bool SetupCreateAreas { get; set; } = true;
+    public bool SetupCreateIterations { get; set; } = true;
+    public bool SetupCreateTeam { get; set; } = true;
+    public bool SetupUploadFiles { get; set; } = true;
+    public bool SetupCreateWorkItems { get; set; } = true;
+
     public string AreaPath => $"{CustomerName}\\{TeamName}";
     public string MainTitle => !string.IsNullOrWhiteSpace(ProjectTitle)
         ? ProjectTitle

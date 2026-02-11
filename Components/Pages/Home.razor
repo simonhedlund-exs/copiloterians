@@ -5,7 +5,7 @@
 <PageTitle>Projektverktyg - Exsitec</PageTitle>
 
 @{
-    var steps = new[] { "Grundinfo", "Projektgrupp", "Planering", "Risker", "DevOps-struktur", "Exportera" };
+    var steps = new[] { "Grundinfo", "Projektgrupp", "Planering", "Risker", "DevOps-struktur", "DevOps Setup", "Exportera" };
 }
 
 <div class="stepper">
@@ -52,6 +52,9 @@
             <StepDevOpsStructure Data="State.Project" />
             break;
         case 5:
+            <StepDevOpsSetup Data="State.Project" />
+            break;
+        case 6:
             <StepExport Data="State.Project" />
             break;
     }
@@ -60,7 +63,7 @@
         <button class="btn btn-outline" @onclick="State.PreviousStep" disabled="@(State.CurrentStep == 0)">
             &#8592; Föregående
         </button>
-        @if (State.CurrentStep < 5)
+        @if (State.CurrentStep < 6)
         {
             <button class="btn btn-primary" @onclick="State.NextStep" disabled="@(!State.CanGoNext())">
                 Nästa &#8594;
