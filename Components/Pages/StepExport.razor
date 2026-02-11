@@ -1,6 +1,5 @@
-@* Steg 6: Exportera *@
+@* Steg 7: Exportera *@
 @inject ExcelGeneratorService ExcelService
-@inject AzureDevOpsService DevOpsService
 @inject IJSRuntime JS
 
 <div class="card">
@@ -79,70 +78,8 @@
     </div>
 </div>
 
-<div class="card">
-    <h2>Pusha till Azure DevOps</h2>
-    <p class="subtitle">Skapa work items direkt i Azure DevOps (valfritt)</p>
-
-    <div class="devops-connection">
-        <div class="form-row-3">
-            <div class="form-group">
-                <label>Organisation</label>
-                <input type="text" @bind="Data.DevOpsOrg" @bind:event="oninput" placeholder="din-org" />
-            </div>
-            <div class="form-group">
-                <label>Projekt</label>
-                <input type="text" @bind="Data.DevOpsProject" @bind:event="oninput" placeholder="projektnamn" />
-            </div>
-            <div class="form-group">
-                <label>Personal Access Token</label>
-                <input type="password" @bind="Data.DevOpsPat" @bind:event="oninput" placeholder="PAT med Work Items-scope" />
-            </div>
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(connectionMessage))
-        {
-            <div class="alert @(connectionSuccess ? "alert-success" : "alert-error")">@connectionMessage</div>
-        }
-
-        <div style="display:flex; gap:0.5rem; margin-top:0.5rem">
-            <button class="btn btn-outline btn-sm" @onclick="TestConnection"
-                    disabled="@(string.IsNullOrWhiteSpace(Data.DevOpsOrg) || string.IsNullOrWhiteSpace(Data.DevOpsProject) || string.IsNullOrWhiteSpace(Data.DevOpsPat) || isTesting)">
-                @(isTesting ? "Testar..." : "Testa anslutning")
-            </button>
-            <button class="btn btn-success" @onclick="PushToDevOps"
-                    disabled="@(!connectionSuccess || isPushing)">
-                @(isPushing ? "Pushar..." : "Pusha work items")
-            </button>
-        </div>
-
-        @if (isPushing && pushProgress != null)
-        {
-            <div style="margin-top:1rem">
-                <div class="progress-bar-custom">
-                    <div class="progress-fill" style="width: @(pushProgress.Total > 0 ? (int)(100.0 * pushProgress.Current / pushProgress.Total) : 0)%"></div>
-                </div>
-                <p class="progress-text">@pushProgress.Message (@pushProgress.Current / @pushProgress.Total)</p>
-            </div>
-        }
-
-        @if (pushResults != null && pushResults.Count > 0)
-        {
-            <div class="alert alert-success" style="margin-top:1rem">
-                Klart! @pushResults.Count work items skapades i Azure DevOps.
-            </div>
-        }
-    </div>
-</div>
-
 @code {
     [Parameter] public ProjectData Data { get; set; } = default!;
-
-    private string? connectionMessage;
-    private bool connectionSuccess;
-    private bool isTesting;
-    private bool isPushing;
-    private ProgressInfo? pushProgress;
-    private List<PushResult>? pushResults;
 
     private async Task DownloadDevOpsImport()
     {
@@ -178,49 +115,5 @@
         await DownloadChecklist();
         await Task.Delay(300);
         await DownloadProjektverktyg();
-    }
-
-    private async Task TestConnection()
-    {
-        isTesting = true;
-        connectionMessage = null;
-        try
-        {
-            await DevOpsService.TestConnectionAsync(Data.DevOpsOrg, Data.DevOpsProject, Data.DevOpsPat);
-            connectionSuccess = true;
-            connectionMessage = "Anslutningen lyckades!";
-        }
-        catch (Exception ex)
-        {
-            connectionSuccess = false;
-            connectionMessage = $"Anslutningen misslyckades: {ex.Message}";
-        }
-        finally
-        {
-            isTesting = false;
-        }
-    }
-
-    private async Task PushToDevOps()
-    {
-        isPushing = true;
-        pushResults = null;
-        try
-        {
-            pushResults = await DevOpsService.PushToDevOpsAsync(Data, progress =>
-            {
-                pushProgress = progress;
-                InvokeAsync(StateHasChanged);
-            });
-        }
-        catch (Exception ex)
-        {
-            connectionMessage = $"Fel vid push: {ex.Message}";
-            connectionSuccess = false;
-        }
-        finally
-        {
-            isPushing = false;
-        }
     }
 }

@@ -28,7 +28,7 @@ public class ProjectStateService
 
     public void NextStep()
     {
-        if (CurrentStep < 5 && CanGoNext())
+        if (CurrentStep < 6 && CanGoNext())
         {
             CurrentStep++;
             NotifyStateChanged();
@@ -46,7 +46,7 @@ public class ProjectStateService
 
     public void GoToStep(int step)
     {
-        if (step >= 0 && step <= 5)
+        if (step >= 0 && step <= 6)
         {
             CurrentStep = step;
             NotifyStateChanged();

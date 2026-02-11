@@ -1,0 +1,290 @@
+@* Steg 6: Azure DevOps Setup – skapa projekt, repo, areas, iterationer *@
+@inject AzureDevOpsService DevOpsService
+@inject ExcelGeneratorService ExcelService
+@inject IJSRuntime JS
+
+<div class="card">
+    <h2>Azure DevOps – Anslutning</h2>
+    <p class="subtitle">Ange organisation och autentisering. PAT:en behöver scope: Project (Read & Write), Code (Read & Write), Work Items (Read & Write)</p>
+
+    <div class="form-row-3">
+        <div class="form-group">
+            <label>Organisation</label>
+            <input type="text" @bind="Data.DevOpsOrg" @bind:event="oninput" placeholder="din-org" />
+        </div>
+        <div class="form-group">
+            <label>Projektnamn (nytt eller befintligt)</label>
+            <input type="text" @bind="Data.DevOpsProject" @bind:event="oninput" placeholder="T.ex. Kundnamn-Integration" />
+        </div>
+        <div class="form-group">
+            <label>Personal Access Token</label>
+            <input type="password" @bind="Data.DevOpsPat" @bind:event="oninput" placeholder="PAT" />
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(connectionMessage))
+    {
+        <div class="alert @(connectionOk ? "alert-success" : "alert-error")">@connectionMessage</div>
+    }
+
+    <button class="btn btn-outline btn-sm" @onclick="TestConnection"
+            disabled="@(string.IsNullOrWhiteSpace(Data.DevOpsOrg) || string.IsNullOrWhiteSpace(Data.DevOpsPat) || isTesting)">
+        @(isTesting ? "Testar..." : "Testa anslutning")
+    </button>
+</div>
+
+<div class="card">
+    <h2>Projektuppsättning</h2>
+    <p class="subtitle">Välj vad som ska skapas automatiskt i Azure DevOps</p>
+
+    <div class="form-group">
+        <label>Process-mall</label>
+        <select @bind="Data.ProcessTemplate">
+            <option value="CMMI">CMMI</option>
+            <option value="Agile">Agile</option>
+            <option value="Scrum">Scrum</option>
+            <option value="Basic">Basic</option>
+        </select>
+    </div>
+
+    <table class="data-table" style="margin-top:1rem">
+        <thead>
+            <tr>
+                <th style="width:40px">Aktiv</th>
+                <th>Åtgärd</th>
+                <th>Beskrivning</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateProject" /></td>
+                <td><strong>Skapa projekt</strong></td>
+                <td>Skapar nytt Azure DevOps-projekt med Git-repo och vald process-mall</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateAreas" /></td>
+                <td><strong>Area Paths</strong></td>
+                <td>Skapar <code>@Data.CustomerName \ @Data.TeamName</code></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateIterations" /></td>
+                <td><strong>Iterationer / Sprints</strong></td>
+                <td>
+                    <div style="display:flex; gap:1rem; align-items:center">
+                        <span>Antal:</span>
+                        <input type="number" @bind="Data.SprintCount" min="1" max="30" style="width:60px" />
+                        <span>Längd (veckor):</span>
+                        <input type="number" @bind="Data.SprintLengthWeeks" min="1" max="6" style="width:60px" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateTeam" /></td>
+                <td><strong>Skapa team</strong></td>
+                <td>Skapar team "@Data.TeamName" och kopplar till area path</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupUploadFiles" /></td>
+                <td><strong>Ladda upp filer till repo</strong></td>
+                <td>Laddar upp genererade Excel-filer (Checklista, Projektverktyg, DevOps Import) till repot</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" @bind="Data.SetupCreateWorkItems" /></td>
+                <td><strong>Skapa work items</strong></td>
+                <td>Skapar alla Epics, Features, Requirements och Tasks i boards</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@if (connectionOk)
+{
+    <div class="card">
+        <h2>Kör uppsättning</h2>
+        <p class="subtitle">Allt klart – klicka för att sätta upp projektet i Azure DevOps</p>
+
+        @if (!isRunning && setupResult == null)
+        {
+            <div class="alert alert-info">
+                <strong>Sammanfattning:</strong> Kommer att
+                @{
+                    var actions = new List<string>();
+                    if (Data.SetupCreateProject) actions.Add("skapa projekt");
+                    if (Data.SetupCreateAreas) actions.Add("skapa area paths");
+                    if (Data.SetupCreateIterations) actions.Add($"skapa {Data.SprintCount} sprints");
+                    if (Data.SetupCreateTeam) actions.Add("skapa team");
+                    if (Data.SetupUploadFiles) actions.Add("ladda upp filer");
+                    if (Data.SetupCreateWorkItems) actions.Add("skapa work items");
+                }
+                @string.Join(", ", actions) i <strong>@Data.DevOpsOrg / @Data.DevOpsProject</strong>.
+            </div>
+
+            <button class="btn btn-primary" @onclick="RunSetup"
+                    disabled="@(!HasAnyAction)">
+                Starta projektuppsättning
+            </button>
+        }
+
+        @if (isRunning && progress != null)
+        {
+            <div style="margin-top:1rem">
+                <div class="progress-bar-custom">
+                    <div class="progress-fill" style="width: @(progress.Total > 0 ? (int)(100.0 * progress.Current / progress.Total) : 0)%"></div>
+                </div>
+                <p class="progress-text">@progress.Message (@progress.Current / @progress.Total)</p>
+            </div>
+        }
+
+        @if (setupResult != null)
+        {
+            <div class="alert @(setupResult.Log.Any(l => l.StartsWith("KRITISKT")) ? "alert-error" : "alert-success")" style="margin-top:1rem">
+                <strong>Uppsättning klar!</strong>
+            </div>
+
+            <div style="margin-top:1rem">
+                <h3 style="color:var(--exsitec-dark); font-size:0.95rem">Resultat</h3>
+                <table class="data-table">
+                    <tbody>
+                        @if (setupResult.ProjectCreated)
+                        {
+                            <tr><td>Projekt</td><td>Skapat (ID: @setupResult.ProjectId)</td></tr>
+                        }
+                        @if (setupResult.AreaPathsCreated)
+                        {
+                            <tr><td>Area Paths</td><td>Skapade</td></tr>
+                        }
+                        @if (setupResult.IterationsCreated)
+                        {
+                            <tr><td>Iterationer</td><td>Skapade</td></tr>
+                        }
+                        @if (setupResult.TeamCreated)
+                        {
+                            <tr><td>Team</td><td>Skapat</td></tr>
+                        }
+                        @if (setupResult.FilesUploaded)
+                        {
+                            <tr><td>Filer</td><td>Uppladdade till repo</td></tr>
+                        }
+                        @if (setupResult.WorkItemsCreated)
+                        {
+                            <tr><td>Work Items</td><td>@setupResult.WorkItemCount st skapade</td></tr>
+                        }
+                    </tbody>
+                </table>
+
+                <details style="margin-top:1rem">
+                    <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--exsitec-dark)">
+                        Visa detaljerad logg (@setupResult.Log.Count rader)
+                    </summary>
+                    <ul style="font-size:0.8rem; margin-top:0.5rem; color:#555">
+                        @foreach (var line in setupResult.Log)
+                        {
+                            <li style="@(line.StartsWith("KRITISKT") || line.Contains("fel") ? "color:#e63946" : "")">@line</li>
+                        }
+                    </ul>
+                </details>
+
+                @if (!setupResult.Log.Any(l => l.StartsWith("KRITISKT")))
+                {
+                    <div style="margin-top:1rem">
+                        <a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject" target="_blank" class="btn btn-secondary">
+                            Öppna projekt i Azure DevOps
+                        </a>
+                    </div>
+                }
+
+                <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" @onclick="ResetSetup">
+                    Kör igen
+                </button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private string? connectionMessage;
+    private bool connectionOk;
+    private bool isTesting;
+    private bool isRunning;
+    private ProgressInfo? progress;
+    private SetupResult? setupResult;
+
+    private bool HasAnyAction => Data.SetupCreateProject || Data.SetupCreateAreas ||
+        Data.SetupCreateIterations || Data.SetupCreateTeam ||
+        Data.SetupUploadFiles || Data.SetupCreateWorkItems;
+
+    private async Task TestConnection()
+    {
+        isTesting = true;
+        connectionMessage = null;
+        try
+        {
+            await DevOpsService.TestOrgConnectionAsync(Data.DevOpsOrg, Data.DevOpsPat);
+            connectionOk = true;
+            connectionMessage = $"Anslutningen till {Data.DevOpsOrg} lyckades!";
+        }
+        catch (Exception ex)
+        {
+            connectionOk = false;
+            connectionMessage = $"Anslutningen misslyckades: {ex.Message}";
+        }
+        finally
+        {
+            isTesting = false;
+        }
+    }
+
+    private async Task RunSetup()
+    {
+        isRunning = true;
+        setupResult = null;
+
+        // Generate Excel files if upload is requested
+        Dictionary<string, byte[]>? files = null;
+        if (Data.SetupUploadFiles)
+        {
+            files = new Dictionary<string, byte[]>
+            {
+                [$"Dokument/AzureDevopsImportStruktur_{Data.CustomerName}.xlsx"] = ExcelService.GenerateDevOpsImport(Data),
+                [$"Dokument/Checklista_{Data.CustomerName}.xlsx"] = ExcelService.GenerateChecklist(Data),
+                [$"Dokument/Projektverktyg_{Data.CustomerName}.xlsx"] = ExcelService.GenerateProjektverktyg(Data)
+            };
+        }
+
+        try
+        {
+            setupResult = await DevOpsService.FullProjectSetupAsync(
+                Data,
+                createProject: Data.SetupCreateProject,
+                createRepo: Data.SetupCreateProject || Data.SetupUploadFiles,
+                uploadFiles: Data.SetupUploadFiles,
+                createAreas: Data.SetupCreateAreas,
+                createIterations: Data.SetupCreateIterations,
+                createTeam: Data.SetupCreateTeam,
+                createWorkItems: Data.SetupCreateWorkItems,
+                filesToUpload: files,
+                onProgress: p =>
+                {
+                    progress = p;
+                    InvokeAsync(StateHasChanged);
+                });
+        }
+        catch (Exception ex)
+        {
+            setupResult = new SetupResult();
+            setupResult.Log.Add($"KRITISKT FEL: {ex.Message}");
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private void ResetSetup()
+    {
+        setupResult = null;
+        progress = null;
+    }
+}
