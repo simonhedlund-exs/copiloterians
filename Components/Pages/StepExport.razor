@@ -1,5 +1,6 @@
 @* Steg 7: Exportera *@
 @inject ExcelGeneratorService ExcelService
+@inject AzureDevOpsService DevOpsService
 @inject IJSRuntime JS
 
 <div class="card">
@@ -78,8 +79,126 @@
     </div>
 </div>
 
+<div class="card">
+    <h2>Importera work items till Azure DevOps</h2>
+    <p class="subtitle">Skicka alla Epics, Features, Requirements och Tasks direkt till ditt Azure DevOps-projekt</p>
+
+    @if (string.IsNullOrWhiteSpace(Data.DevOpsOrg) || string.IsNullOrWhiteSpace(Data.DevOpsProject) || string.IsNullOrWhiteSpace(Data.DevOpsPat))
+    {
+        <div class="alert alert-error">
+            Du måste ange Organisation, Projektnamn och PAT i steget "DevOps Setup" innan du kan importera.
+        </div>
+    }
+    else
+    {
+        @if (!isImporting && importResults == null)
+        {
+            <div class="export-grid">
+                <div class="export-card">
+                    <div class="export-icon">🚀</div>
+                    <h3>Importera till DevOps</h3>
+                    <p>Importerar @totalItems work items till <strong>@Data.DevOpsOrg / @Data.DevOpsProject</strong></p>
+                    <button class="btn btn-primary" @onclick="ImportToDevOps">Importera work items</button>
+                </div>
+            </div>
+        }
+
+        @if (isImporting && importProgress != null)
+        {
+            <div style="margin-top:1rem">
+                <div class="progress-bar-custom">
+                    <div class="progress-fill" style="width: @(importProgress.Total > 0 ? (int)(100.0 * importProgress.Current / importProgress.Total) : 0)%"></div>
+                </div>
+                <p class="progress-text">@importProgress.Message (@importProgress.Current / @importProgress.Total)</p>
+            </div>
+        }
+
+        @if (importResults != null)
+        {
+            <div class="alert alert-success" style="margin-top:1rem">
+                <strong>Klart!</strong> @importResults.Count work items skapade i Azure DevOps.
+            </div>
+
+            <details style="margin-top:0.5rem">
+                <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--exsitec-dark)">
+                    Visa skapade work items (@importResults.Count st)
+                </summary>
+                <table class="data-table" style="margin-top:0.5rem; font-size:0.85rem">
+                    <thead><tr><th>Typ</th><th>Titel</th><th>ID</th></tr></thead>
+                    <tbody>
+                        @foreach (var item in importResults)
+                        {
+                            <tr>
+                                <td><span class="wi-badge wi-@item.Type.ToLower()">@item.Type</span></td>
+                                <td>@item.Title</td>
+                                <td><a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_workitems/edit/@item.Id" target="_blank">@item.Id</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </details>
+
+            <div style="margin-top:1rem; display:flex; gap:0.5rem">
+                <a href="https://dev.azure.com/@Data.DevOpsOrg/@Data.DevOpsProject/_backlogs" target="_blank" class="btn btn-secondary">
+                    Öppna Backlog i DevOps
+                </a>
+                <button class="btn btn-outline btn-sm" @onclick="ResetImport">Importera igen</button>
+            </div>
+        }
+
+        @if (importError != null)
+        {
+            <div class="alert alert-error" style="margin-top:1rem">
+                <strong>Fel:</strong> @importError
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" @onclick="ResetImport">Försök igen</button>
+        }
+    }
+</div>
+
 @code {
     [Parameter] public ProjectData Data { get; set; } = default!;
+
+    private bool isImporting;
+    private ProgressInfo? importProgress;
+    private List<PushResult>? importResults;
+    private string? importError;
+
+    private int totalItems => Data.DevOpsStructure.Epics.Count
+        + Data.DevOpsStructure.Epics.Sum(e => e.Features.Count)
+        + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Count))
+        + Data.DevOpsStructure.Epics.Sum(e => e.Features.Sum(f => f.Requirements.Sum(r => r.Tasks.Count)));
+
+    private async Task ImportToDevOps()
+    {
+        isImporting = true;
+        importResults = null;
+        importError = null;
+
+        try
+        {
+            importResults = await DevOpsService.PushToDevOpsAsync(Data, p =>
+            {
+                importProgress = p;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            importError = ex.Message;
+        }
+        finally
+        {
+            isImporting = false;
+        }
+    }
+
+    private void ResetImport()
+    {
+        importResults = null;
+        importProgress = null;
+        importError = null;
+    }
 
     private async Task DownloadDevOpsImport()
     {
